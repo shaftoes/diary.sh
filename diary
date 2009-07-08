@@ -3,8 +3,8 @@
 #  diary
 #
 #  A simple program to keep track of daily events.  Editing is allowed only
-#  on the current day's page (unless you cheat).  
-# 
+#  on the current day's page (unless you cheat).
+#
 #  Creates a directory, ".diary", in the users home directory.  Individual pages
 #  are stored in ".diary/pages"
 #
@@ -104,18 +104,18 @@ promote_text()
    awk -v fwd=$1 -- '/^ *\([^\(]*[^ ][^\(]*\)/ { carry = 0 }
                      /^ *\{[^\{]*[^ ][^\{]*\}/ { carry = 0 }
                      /^ *\[[^\[]*[^ ][^\[]*\]/ { carry = 0 }
-                     /^ *\( *\)/ { carry = 1 } 
-                     /^ *\{ *\}/ { carry = 1 } 
-                     /^ *\[ *\]/ { carry = 1 } 
-                     { if ( fwd ) { if (carry)   print $0 } 
+                     /^ *\( *\)/ { carry = 1 }
+                     /^ *\{ *\}/ { carry = 1 }
+                     /^ *\[ *\]/ { carry = 1 }
+                     { if ( fwd ) { if (carry)   print $0 }
                        else       { if (! carry) print $0 }
-                     } 
+                     }
                      /^ *$/{ carry = 0 }'
 }
 
 tmpname_from_dir ()
 {
-   echo $1 | 
+   echo $1 |
      sed -e 's:.*/\([0-9]\+\)/\([0-9]\+\)/\([0-9]\+\)\.cal:\1\.\2\.\3:'
 }
 
@@ -145,7 +145,7 @@ make_today ()
 
 get_old_pages ()
 {
-   find $PAGEDIR -maxdepth 1 -name '????.??.??' 
+   find $PAGEDIR -maxdepth 1 -name '????.??.??'
 }
 
 refile_old_pages ()
@@ -155,7 +155,7 @@ refile_old_pages ()
    chmod -R u+w $PAGEDIR
 
    for fil in `get_old_pages`; do
-      FPATH=`echo $fil | 
+      FPATH=`echo $fil |
              sed -e 's:\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\):\1\/\2\/\3:'`
       FPATH=$FPATH.cal
       MONTHDIR=`dirname $FPATH`
@@ -205,7 +205,7 @@ cheat_diary ()
       date --date="$*" '+%A, %B %d, %Y' >> $PAGEDIR/$CHEAT
       echo >> $PAGEDIR/$CHEAT
 
-      chmod -R a-w $PAGEDIR 
+      chmod -R a-w $PAGEDIR
    fi
 
    cp $PAGEDIR/$CHEAT $CHEAT_ORG
@@ -219,14 +219,13 @@ cheat_diary ()
    chmod u+w $PAGEDIR $PAGEDIR/$CHEAT
 
    if [ -f "$CHEAT_ORG" ]; then
-      merge $PAGEDIR/$CHEAT $CHEAT_ORG $CHEAT_TMP 
+      merge $PAGEDIR/$CHEAT $CHEAT_ORG $CHEAT_TMP
    else
       cp $CHEAT_TMP $PAGEDIR/$CHEAT
    fi
 
    rm -f $CHEAT_TMP $CHEAT_ORG
    chmod -R a-w $PAGEDIR
-
 }
 
 review_page () 
@@ -277,8 +276,8 @@ review_entered ()
    fi
 
    builtin cd $PAGEDIR
-   for fil in `find . -name '??.cal' | sort  | tail -$PAGES`; do 
-      DATE=`echo $fil | sed -e 's:\.cal::; s:^./::'`
+   for fil in `find . -name '??.cal' | sort | tail -$PAGES`; do
+      DATE=`echo $fil | sed -e 's:\.cal::; s:^\./::'`
       review_page $DATE
    done
 }
@@ -293,7 +292,7 @@ review_month ()
       if [ $TGT_MONTH -gt $THIS_MONTH ]; then
          YEAR=$[$YEAR-1]
       fi
-   else 
+   else
       YEAR=$2
    fi
 
@@ -305,7 +304,7 @@ review_month ()
       echo "No entries for $1, $YEAR"
       echo
    else
-      for fil in `echo $ENTRIES | sort | tail -$PAGES`; do 
+      for fil in `echo $ENTRIES | sort | tail -$PAGES`; do
          DATE=`echo $fil | sed -e 's:\.cal::'`
          review_page $DATE
       done
@@ -322,9 +321,9 @@ grep_diary ()
       ARG=`expr "$1" : '-.*'`
    done
 
-   echo 
+   echo
    builtin cd $PAGEDIR
-   egrep $ARGS "$*" `find . -name '??.cal' | sort` 
+   egrep $ARGS "$*" `find . -name '??.cal' | sort`
    echo
 }
 
@@ -351,7 +350,8 @@ search_diary ()
    builtin cd $PAGEDIR
    label_xterm "Diary Search '$*'"
    egrep $ARGS --files-with-matches "$*" `find . -name '??.cal' | sort -r` |
-      xargs less -P'"u" for older, "i" for newer ' -k$LESSOPTS +"/$*" ++g
+      xargs less -P'"u" for older, "i" for newer ' -k$LESSOPTS +"/$*
+" ++g
    label_xterm $XTITLE
 }
 
@@ -364,7 +364,7 @@ add_entry ()
    chmod u+w $TODAY_TMP $TODAY_ORG
 
    DAT=`date +%H:%M`
-   echo $DAT $* >> $TODAY_TMP 
+   echo $DAT $* >> $TODAY_TMP
 
    chmod u+w $PAGEDIR $PAGEDIR/$TODAY
    merge $PAGEDIR/$TODAY $TODAY_ORG $TODAY_TMP
@@ -414,7 +414,7 @@ cat_page ()
 }
 
 ################################################################################
-# main 
+# main
 ################################################################################
 
 #  Handle first time use
@@ -426,13 +426,13 @@ OLD_PAGE_LIST=`get_old_pages`
 
 LATEST=`find $PAGEDIR -type f | sort -r | head -1`
 if [ "$LATEST" != "$PAGEDIR/$TODAY" ]; then
-   make_today $LATEST 
+   make_today $LATEST
 fi
 
 if [ "$#" = "0" ]; then
   edit_diary
 elif [ "$#" = "1" ]; then
-   PARAM=`echo $1 | tr A-Z a-z` 
+   PARAM=`echo $1 | tr A-Z a-z`
    case "$PARAM" in
       cheat | edit )
          edit_diary
@@ -462,7 +462,7 @@ elif [ "$#" = "1" ]; then
       ;;
    esac
 else
-   PARAM=`echo $1 | tr A-Z a-z` 
+   PARAM=`echo $1 | tr A-Z a-z`
    case "$PARAM" in
       cheat )
          shift
@@ -478,11 +478,11 @@ else
 	   ;;
       search )
          shift
-         search_diary $@      
+         search_diary $@
       ;;
       grep )
          shift
-         grep_diary $@      
+         grep_diary $@
       ;;
       cat )
          shift

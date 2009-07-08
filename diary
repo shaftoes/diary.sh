@@ -55,6 +55,29 @@ TTMP=`date +%Y.%m.%d`
 TODAY_TMP=$DIARYDIR/$TTMP.$$.tmp
 TODAY_ORG=$DIARYDIR/$TTMP.$$.org
 
+################################################################################
+# functions to manipulate dates
+################################################################################
+
+unified_date ()
+{
+   date '+%Y/%m/%d' --date="$1"
+}
+
+header_from_unified_date ()
+{
+   date --date="$1" '+%A, %x'
+}
+
+header_for_today ()
+{
+   header_from_unified_date ''
+}
+
+################################################################################
+# core functions
+################################################################################
+
 print_usage ()
 {
    cat << ENDUSAGE
@@ -127,8 +150,8 @@ make_today ()
    MONTHDIR=`dirname $PAGEDIR/$TODAY`
    [ -d $MONTHDIR ] || mkdir -p $MONTHDIR
 
-   echo -n "                       " > $PAGEDIR/$TODAY  
-   date "+%A, %B %d, %Y" >> $PAGEDIR/$TODAY
+   HEADER=`header_for_today`
+   echo "                         $HEADER" > $PAGEDIR/$TODAY
    echo >> $PAGEDIR/$TODAY
 
    if [ "$LAST" != "" ]; then
@@ -228,19 +251,29 @@ cheat_diary ()
    chmod -R a-w $PAGEDIR
 }
 
-review_page () 
+#
+# Print entry for specified date with header.
+# If entry does not exist, only header is printed.
+#
+# Arguments:
+#   $1 - unified date
+#
+review_page ()
 {
-   DATESTR=`date --date="$*" '+%A, %B %d, %Y'`
+   HEADER=`header_from_unified_date "$1"`
+   PAGE="$PAGEDIR/$1.cal"
 
-   HEADER=`date --date="$DATESTR" '+%A, %m/%d/%y'`
-   PAGE="$PAGEDIR/`date --date="$DATESTR" +'%Y/%m/%d.cal'`"
-   printf "===== %-19s ========================================\n" "$HEADER"
+      #
+      # Don't specify field width here because it's almost useless
+      # as printf does not understand UTF-8 characters
+      # (it actually counts bytes, not characters). See
+      # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=459413.
+      #
+   echo "===== $HEADER ========================================"
    if [ -f $PAGE ]; then
-      expand -$SPERTAB $PAGE | grep -v "^ *$DATESTR *$" | promote_text 0
-      echo
-   else
-      echo 
+      expand -$SPERTAB $PAGE | grep -v "^ *$HEADER *$" | promote_text 0
    fi
+   echo
 }
 
 review_diary ()
@@ -257,7 +290,7 @@ review_diary ()
    echo
 
    while [ $DAY -ge 0 ]; do
-      review_page `date --date="$DAY days ago"`
+      review_page `unified_date "$DAY days ago"`
       DAY=$[$DAY - 1]
    done
 

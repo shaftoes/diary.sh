@@ -210,7 +210,8 @@ edit_diary ()
 
 cheat_diary ()
 {
-   CHEAT=`date --date="$*" '+%Y/%m/%d.cal'` || return 1
+   UNIFIED_DATE=`unified_date "$*"`
+   CHEAT="${UNIFIED_DATE}".cal
 
    DATETMP=`date --date="$*" '+%Y.%m.%d'`
    CHEAT_TMP="$DIARYDIR/$DATETMP.$$.cheat"
@@ -224,8 +225,8 @@ cheat_diary ()
       [ -d "$CHEATDIR" ] || mkdir -p $CHEATDIR
       chmod u+w $CHEATDIR
 
-      echo -n "                       " > $PAGEDIR/$CHEAT
-      date --date="$*" '+%A, %B %d, %Y' >> $PAGEDIR/$CHEAT
+      HEADER=`header_from_unified_date "${UNIFIED_DATE}"`
+      echo "                         $HEADER" > $PAGEDIR/$CHEAT
       echo >> $PAGEDIR/$CHEAT
 
       chmod -R a-w $PAGEDIR

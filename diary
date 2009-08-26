@@ -28,14 +28,14 @@ XTITLE=
 if [ "$TERM" == "xterm" ]; then
    XPROPS=`xprop -id $WINDOWID 2>/dev/null`
    if [ ! -z "$XPROPS" ]; then
-      XTITLE=$( echo "$XPROPS" | grep WM_NAME | cut -d= -f2\
-                                     | sed -e 's/"\(.*\)"/\1/g')
+      XTITLE=`echo "$XPROPS" | grep WM_NAME | cut -d= -f2\
+                                     | sed -e 's/"\(.*\)"/\1/g'`
    fi
 fi
 
 #  Respect the EDITOR environment variable, if it exists
 if [ "$EDITOR" = "" ]; then
-	EDITOR="/usr/bin/vim"
+   EDITOR="/usr/bin/vim"
    EDIT_OPTIONS="-c :$ -c \"set tabstop=$SPERTAB textwidth=80 fen fdm=marker\""
 fi
 
@@ -49,71 +49,9 @@ FWDKEY=i
 LESSKEY=$DIARYDIR/lesskey
 LESSOPTS=$DIARYDIR/.less_srch
 
-TODAY=`date +%Y/%m/%d.cal`
-
-TTMP=`date +%Y.%m.%d`
-TODAY_TMP=$DIARYDIR/$TTMP.$$.tmp
-TODAY_ORG=$DIARYDIR/$TTMP.$$.org
-
 ################################################################################
-# functions to manipulate dates
+# functions
 ################################################################################
-
-unified_date ()
-{
-   date '+%Y/%m/%d' --date="$1"
-}
-
-header_from_unified_date ()
-{
-   date --date="$1" '+%A, %x'
-}
-
-header_for_today ()
-{
-   header_from_unified_date ''
-}
-
-################################################################################
-# core functions
-################################################################################
-
-print_usage ()
-{
-   cat << ENDUSAGE
-
-Examples:  diary  - Opens today's page for editing.  Paragraphs beginning
-                    with a matching set of brackets containing nothing but
-                    space will be carried forward to the next day.  Putting
-                    a non-space character between a bracket set will cause
-                    it to be left behind.
-
-           diary entry Hello World  - adds a line to today's diary.
-           diary cheat yesterday    - This is cheating! ... but you can edit
-                                      past entries if you really want to.
-
-           diary 10/15/99   - Opens october 15 entry for viewing.
-           diary 2 days ago - View the day before yesterday's entry.
-           diary review     - outputs entries for the last 8 calendar days.
-           diary review 3   - outputs entries for the last 3 calendar days.
-
-           diary list 5       - outputs the last 5 non-blank pages.
-           diary october      - outputs all of the past October's non-blank
-                                pages.
-           diary october 2000 - outputs all of year 2000 October's non-blank
-                                pages.
-
-
-           diary cat              - dumps today's page to stdout.
-           diary cat last monday  - dumps last Monday's page to stdout.
-
-           diary grep [Ff]ind     - greps pages for lines containing
-                                    find or Find.
-           diary search "^Fixed"  - opens pages for viewing that contain
-                                    lines that start with "Fixed".
-
-ENDUSAGE
-}
 
 label_xterm()
 {
@@ -122,49 +60,185 @@ label_xterm()
    fi
 }
 
-promote_text()
+# --------------------
+
+unified_date ()
 {
-   awk -v fwd=$1 -- '/^ *\([^\(]*[^ ][^\(]*\)/ { carry = 0 }
-                     /^ *\{[^\{]*[^ ][^\{]*\}/ { carry = 0 }
-                     /^ *\[[^\[]*[^ ][^\[]*\]/ { carry = 0 }
-                     /^ *\( *\)/ { carry = 1 }
-                     /^ *\{ *\}/ { carry = 1 }
-                     /^ *\[ *\]/ { carry = 1 }
-                     { if ( fwd ) { if (carry)   print $0 }
-                       else       { if (! carry) print $0 }
-                     }
-                     /^ *$/{ carry = 0 }'
+   DATE=`date '+%Y/%m/%d' --date="$1"` && echo $DATE || return 1
 }
 
-tmpname_from_dir ()
+# --------------------
+
+header ()
 {
-   echo $1 |
-     sed -e 's:.*/\([0-9]\+\)/\([0-9]\+\)/\([0-9]\+\)\.cal:\1\.\2\.\3:'
+   date --date="$1" '+%A, %x'
 }
 
-make_today ()
+header_today ()
 {
-   LAST=$1
-   chmod -R u+w $PAGEDIR
+   header ''
+}
 
-   MONTHDIR=`dirname $PAGEDIR/$TODAY`
-   [ -d $MONTHDIR ] || mkdir -p $MONTHDIR
+# --------------------
 
-   HEADER=`header_for_today`
-   echo "                         $HEADER" > $PAGEDIR/$TODAY
-   echo >> $PAGEDIR/$TODAY
+tmp ()
+{
+  echo $DIARYDIR/`date --date="$1" '+%Y.%m.%d'`.$$
+}
 
-   if [ "$LAST" != "" ]; then
-      LAST_TMP=`tmpname_from_dir $LAST`
+# --------------------
 
-      expand -$SPERTAB $LAST | promote_text 1 >> $PAGEDIR/$TODAY
-      expand -$SPERTAB $LAST | promote_text 0  > $LAST_TMP
+_entry_filepath ()
+{
+   echo $PAGEDIR/$1.cal
+}
 
-      mv -f $LAST_TMP $LAST
-   fi
+_entry_ensure_exists ()
+{
+   FILEPATH=`_entry_filepath $1`
+   [ -f $FILEPATH ] && return
+
+   DIR=`dirname $FILEPATH`
+
+   chmod u+w $PAGEDIR
+   [ -d "$DIR" ] || mkdir -p $DIR
+   chmod u+w $DIR
+
+   echo "                         `header $1`" > $FILEPATH
+   echo >> $FILEPATH
 
    chmod -R a-w $PAGEDIR
 }
+
+_entry_change ()
+{
+   FILE=$1
+   CALLBACK=$2
+   shift 2
+
+   _entry_ensure_exists $FILE
+
+   FILEPATH=`_entry_filepath $FILE`
+   TMP=`tmp $FILE`.cheat
+
+   cp $FILEPATH $TMP
+   chmod u+w $TMP
+
+   eval $CALLBACK $FILE $TMP $@
+
+   chmod u+w $FILEPATH
+   cp $TMP $FILEPATH
+   rm -f $TMP
+   chmod -R a-w $PAGEDIR
+}
+
+entry ()
+{
+  echo $1
+}
+
+entry_cat ()
+{
+   FILEPATH=`_entry_filepath $1`
+   [ -f $FILEPATH ] && cat $FILEPATH
+   return $?
+}
+
+entry_review ()
+{
+   HEADER=`header $1`
+   FILEPATH=`_entry_filepath $1`
+
+      #
+      # Don't specify field width here because it's almost useless
+      # as printf does not understand UTF-8 characters
+      # (it actually counts bytes, not characters). See
+      # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=459413.
+      #
+   echo "===== $HEADER ========================================"
+   [ -f $FILEPATH ] && expand -$SPERTAB $FILEPATH | grep -v "^ *$HEADER *$"
+   echo
+}
+
+entry_view ()
+{
+   FILEPATH=`_entry_filepath $1`
+   if [ -f $FILEPATH ]; then
+      label_xterm "Diary: view $1"
+      less -c +g $FILEPATH
+      label_xterm $XTITLE
+      return 0
+   fi
+   return 1
+}
+
+_entry_add_entry ()
+{
+   DATE=$1
+   FILE=$2
+   shift 2
+
+   echo `date +%H:%M` $@ >> $FILE
+}
+
+entry_add_entry ()
+{
+   FILE=$1
+   shift
+
+   _entry_change $FILE _entry_add_entry $@
+}
+
+_entry_edit ()
+{
+   label_xterm "Diary: edit $1"
+   $EDITOR $EDIT_OPTIONS $2
+   label_xterm $XTITLE
+}
+
+entry_edit ()
+{
+   _entry_change $1 _entry_edit
+}
+
+################################################################################
+# core functions
+################################################################################
+
+usage ()
+{
+   cat << ENDUSAGE
+Examples:
+
+  diary                  - open today's page for editing
+  diary entry Hi World   - add a line to today's diary page
+
+  diary cat              - dump today's page to stdout
+  diary cat last monday  - dump last Monday's page to stdout
+
+  diary view             - view today's page
+  diary view 10/15/99    - open october 15, 1999 page for viewing
+  diary view 2 days ago  - view the day before yesterday's page
+
+  diary edit yesterday   - this is cheating! ... but you can edit
+                           past entries if you really want to
+
+  diary list 5           - output the last 5 non-blank pages
+  diary october          - output all of the past October's non-blank pages
+  diary october 2000     - output all of year 2000 October's non-blank pages
+
+  diary review           - output entries for the last week
+  diary review 3         - output entries for the last 3 calendar days
+
+  diary grep [Ff]ind     - grep pages for lines containing find or Find
+  diary grep -F Find     - search for fixed string (options are passed
+                           directly to grep)
+  diary search "^Fixed"  - open pages for viewing that contain
+                           lines that start with "Fixed"
+ENDUSAGE
+}
+
+# --------------------
 
 get_old_pages ()
 {
@@ -192,259 +266,115 @@ refile_old_pages ()
    chmod -R a-w $PAGEDIR
 }
 
+# --------------------
+
+cat_page ()
+{
+   DATE=`unified_date "$*"` && entry_cat `entry $DATE` || return 1
+}
+
+view_page ()
+{
+   DATE=`unified_date "$*"` && entry_view `entry $DATE` || return 1
+}
+
 edit_diary ()
 {
-   cp $PAGEDIR/$TODAY $TODAY_TMP
-   cp $PAGEDIR/$TODAY $TODAY_ORG
-   chmod u+w $TODAY_TMP $TODAY_ORG
-
-   label_xterm "Diary $TODAY"
-   eval $EDITOR $EDIT_OPTIONS $TODAY_TMP
-   label_xterm $XTITLE
-
-   chmod u+w $PAGEDIR $PAGEDIR/$TODAY
-   merge $PAGEDIR/$TODAY $TODAY_ORG $TODAY_TMP
-   rm $TODAY_TMP $TODAY_ORG
-   chmod -R a-w $PAGEDIR
+   DATE=`unified_date "$*"` && entry_edit `entry $DATE` || return 1
 }
 
-cheat_diary ()
+add_entry ()
 {
-   UNIFIED_DATE=`unified_date "$*"`
-   CHEAT="${UNIFIED_DATE}".cal
-
-   DATETMP=`date --date="$*" '+%Y.%m.%d'`
-   CHEAT_TMP="$DIARYDIR/$DATETMP.$$.cheat"
-   CHEAT_ORG="$DIARYDIR/$DATETMP.$$.org"
-
-   if [ ! -f  $PAGEDIR/$CHEAT ]; then
-
-      CHEATDIR=`dirname $PAGEDIR/$CHEAT`
-
-      chmod u+w $PAGEDIR
-      [ -d "$CHEATDIR" ] || mkdir -p $CHEATDIR
-      chmod u+w $CHEATDIR
-
-      HEADER=`header_from_unified_date "${UNIFIED_DATE}"`
-      echo "                         $HEADER" > $PAGEDIR/$CHEAT
-      echo >> $PAGEDIR/$CHEAT
-
-      chmod -R a-w $PAGEDIR
-   fi
-
-   cp $PAGEDIR/$CHEAT $CHEAT_ORG
-   cp $PAGEDIR/$CHEAT $CHEAT_TMP
-   chmod u+w $CHEAT_TMP $CHEAT_ORG
-
-   label_xterm "Diary Cheat $CHEAT"
-   eval $EDITOR $EDIT_OPTIONS $CHEAT_TMP
-   label_xterm $XTITLE
-
-   chmod u+w $PAGEDIR $PAGEDIR/$CHEAT
-
-   if [ -f "$CHEAT_ORG" ]; then
-      merge $PAGEDIR/$CHEAT $CHEAT_ORG $CHEAT_TMP
-   else
-      cp $CHEAT_TMP $PAGEDIR/$CHEAT
-   fi
-
-   rm -f $CHEAT_TMP $CHEAT_ORG
-   chmod -R a-w $PAGEDIR
+   entry_add_entry $(entry $(unified_date)) $@ || return 1
 }
 
-#
-# Print entry for specified date with header.
-# If entry does not exist, only header is printed.
-#
-# Arguments:
-#   $1 - unified date
-#
-review_page ()
-{
-   HEADER=`header_from_unified_date "$1"`
-   PAGE="$PAGEDIR/$1.cal"
-
-      #
-      # Don't specify field width here because it's almost useless
-      # as printf does not understand UTF-8 characters
-      # (it actually counts bytes, not characters). See
-      # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=459413.
-      #
-   echo "===== $HEADER ========================================"
-   if [ -f $PAGE ]; then
-      expand -$SPERTAB $PAGE | grep -v "^ *$HEADER *$" | promote_text 0
-   fi
-   echo
-}
+# --------------------
 
 review_diary ()
 {
    DAY=7
    if [ -n "$1" ]; then
-      if [ $[$1] -le 0 ]; then
-         echo Invalid number of days: \"$1\"
+      DAY=$1
+      if [ $1 -le 0 ]; then
+         echo "Invalid number of days: $1"
          return 1
       fi
-      DAY=$[$1 - 1]
    fi
 
    echo
-
-   while [ $DAY -ge 0 ]; do
-      review_page `unified_date "$DAY days ago"`
-      DAY=$[$DAY - 1]
+   while [ $DAY -gt 0 ]; do
+      let DAY=DAY-1
+      entry_review $(entry $(unified_date "$DAY days ago"))
    done
-
-   echo
 }
 
-review_entered ()
+list_diary ()
 {
-   PAGES=1
+   PAGES=7
    if [ -n "$1" ]; then
-      PAGES=$[$1]
+      PAGES=$1
       if [ $PAGES -le 0 ]; then
-         echo Invalid number of days: \"$1\"
+         echo "Invalid number of pages: $1"
          return 1
       fi
    fi
 
+   echo
    builtin cd $PAGEDIR
    for fil in `find . -name '??.cal' | sort | tail -$PAGES`; do
       DATE=`echo $fil | sed -e 's:\.cal::; s:^\./::'`
-      review_page $DATE
+      entry_review `entry $DATE`
    done
 }
 
-review_month ()
+list_month ()
 {
-   TGT_MONTH=`date --date="$1 1" +%m`
+   MONTH=`date --date="$1 1" +%m`
 
-   if [ $# -eq 1 ]; then
+   if [ -n "$2" ]; then
+      YEAR=$2
+   else
       YEAR=`date +%Y`
       THIS_MONTH=`date +%m`
-      if [ $TGT_MONTH -gt $THIS_MONTH ]; then
-         YEAR=$[$YEAR-1]
+      if [ $MONTH -gt $THIS_MONTH ]; then
+         let YEAR=YEAR-1
       fi
-   else
-      YEAR=$2
    fi
 
+   echo
    builtin cd $PAGEDIR
-   ENTRIES=`ls $YEAR/$TGT_MONTH/??.cal 2>/dev/null`
-
-   if [ "$ENTRIES" = "" ]; then
-      echo
-      echo "No entries for $1, $YEAR"
-      echo
-   else
-      for fil in `echo $ENTRIES | sort | tail -$PAGES`; do
-         DATE=`echo $fil | sed -e 's:\.cal::'`
-         review_page $DATE
-      done
-   fi
+   for fil in `ls $YEAR/$MONTH/??.cal | sort`; do
+      DATE=`echo $fil | sed -e 's:\.cal::'`
+      entry_review `entry $DATE`
+   done
 }
+
+# --------------------
 
 grep_diary ()
 {
-   ARGS=
-   ARG=`expr "$1" : '-.*'`
-   while [ $ARG -gt 0 ]; do
-      ARGS="$ARGS $1"
-      shift
-      ARG=`expr "$1" : '-.*'`
-   done
-
-   echo
    builtin cd $PAGEDIR
-   egrep $ARGS "$*" `find . -name '??.cal' | sort`
-   echo
+   grep "$@" `find . -name '??.cal' | sed 's:^\./::' | sort`
 }
 
 search_diary ()
 {
-   ARGS=
-   ARG=`expr "$1" : '-.*'`
-   while [ $ARG -gt 0 ]; do
-      ARGS="$ARGS $1"
-      shift
-      ARG=`expr "$1" : '-.*'`
-   done
-
    if [ ! -f $LESSOPTS ] || [ $LESSOPTS -ot $0 ]; then
       {
          echo #command
-         echo $BACKKEY		next-file
-         echo $FWDKEY		prev-file
+         echo $BACKKEY    next-file
+         echo $FWDKEY   prev-file
       } > $LESSKEY
       lesskey -o $LESSOPTS $LESSKEY
       rm $LESSKEY
    fi
 
    builtin cd $PAGEDIR
-   label_xterm "Diary Search '$*'"
-   egrep $ARGS --files-with-matches "$*" `find . -name '??.cal' | sort -r` |
-      xargs less -P'"u" for older, "i" for newer ' -k$LESSOPTS +"/$*
+   label_xterm "Diary: search for $*"
+   egrep --files-with-matches "$*" `find . -name '??.cal' | sort -r` |
+      xargs less -P'"u" for older, "i" for newer' -k$LESSOPTS +"/$*
 " ++g
    label_xterm $XTITLE
-}
-
-add_entry ()
-{
-   LATEST_TMP="$DIARYDIR/$LATEST"
-
-   cp $PAGEDIR/$TODAY $TODAY_TMP
-   cp $PAGEDIR/$TODAY $TODAY_ORG
-   chmod u+w $TODAY_TMP $TODAY_ORG
-
-   DAT=`date +%H:%M`
-   echo $DAT $* >> $TODAY_TMP
-
-   chmod u+w $PAGEDIR $PAGEDIR/$TODAY
-   merge $PAGEDIR/$TODAY $TODAY_ORG $TODAY_TMP
-   rm $TODAY_TMP $TODAY_ORG
-   # mv -f $TODAY_TMP $PAGEDIR/$TODAY
-   chmod -R a-w $PAGEDIR
-}
-
-view_page ()
-{
-   DATESTR=`date --date="$*" '+%Y/%m/%d.cal' 2>/dev/null`
-   if [ -n "$DATESTR" ]; then
-      if [ -f $PAGEDIR/$DATESTR ]; then
-         if [ "$DATESTR" = "$TODAY" ]; then
-            edit_diary || less -c +g $PAGEDIR/$DATESTR
-         else
-            label_xterm "Diary View $DATESTR"
-            less -c +g $PAGEDIR/$DATESTR
-            label_xterm $XTITLE
-         fi
-      else
-         DATESTR=`date --date="$*" '+%A, %B %d, %Y'`
-         echo "There is no entry for $DATESTR ($*)"
-      fi
-   else
-      return 1
-   fi
-
-   return 0
-}
-
-cat_page ()
-{
-   DATESTR=`date --date="$*" '+%Y/%m/%d.cal'`
-   if [ -n "$DATESTR" ]; then
-      if [ -f $PAGEDIR/$DATESTR ]; then
-         cat $PAGEDIR/$DATESTR
-      else
-         DATESTR=`date --date="$*" '+%A, %B %d, %Y'`
-         echo "There is no entry for $DATESTR ($*)"
-      fi
-   else
-      return 1
-   fi
-
-   return 0
 }
 
 ################################################################################
@@ -455,84 +385,87 @@ cat_page ()
 [ -d $PAGEDIR ] || mkdir -p $PAGEDIR
 
 #  Handle conversion from old format
-OLD_PAGE_LIST=`get_old_pages`
-[ -n "$OLD_PAGE_LIST" ] && refile_old_pages
+[ -n "`get_old_pages`" ] && refile_old_pages
 
-LATEST=`find $PAGEDIR -type f | sort -r | head -1`
-if [ "$LATEST" != "$PAGEDIR/$TODAY" ]; then
-   make_today $LATEST
-fi
-
-if [ "$#" = "0" ]; then
+if [ $# = 0 ]; then
   edit_diary
-elif [ "$#" = "1" ]; then
+elif [ $# = 1 ]; then
    PARAM=`echo $1 | tr A-Z a-z`
-   case "$PARAM" in
-      cheat | edit )
-         edit_diary
-      ;;
-      review )
-         review_diary
-	   ;;
-      list )
-         review_entered
-	   ;;
-      search | grep )
-         echo "You need to specify search terms."
+   case $PARAM in
+      help | ? | usage | -h | --help )
+         usage
       ;;
       cat )
          cat_page
-	   ;;
-      help | ? | usage | -h | --help )
-         print_usage
+      ;;
+      view )
+         view_page
+      ;;
+      edit )
+         edit_diary
+      ;;
+      list )
+         list_diary
+      ;;
+      review )
+         review_diary
+      ;;
+      grep | search )
+         echo "You need to specify search terms."
       ;;
       january | february | march | april | \
       may | june | july | august | \
       september | october | november | december )
-         review_month $PARAM
+         list_month $PARAM
       ;;
       * )
-         view_page "$*" || echo "Invalid parameter $@"
+         echo "Invalid parameter: $@" 1>&2
+         exit 1
       ;;
    esac
 else
    PARAM=`echo $1 | tr A-Z a-z`
-   case "$PARAM" in
-      cheat )
+   case $PARAM in
+      entry )
          shift
-         cheat_diary $@
-      ;;
-      review )
-         shift
-         review_diary $@
-	   ;;
-      list )
-         shift
-         review_entered $@
-	   ;;
-      search )
-         shift
-         search_diary $@
-      ;;
-      grep )
-         shift
-         grep_diary $@
+         add_entry $@
       ;;
       cat )
          shift
          cat_page $@
-	   ;;
-      entry )
+      ;;
+      view )
          shift
-         add_entry $@
-	   ;;
+         view_page $@
+      ;;
+      edit )
+         shift
+         edit_diary $@
+      ;;
+      list )
+         shift
+         list_diary $@
+      ;;
+      review )
+         shift
+         review_diary $@
+      ;;
+      grep )
+         shift
+         grep_diary "$@"
+      ;;
+      search )
+         shift
+         search_diary $@
+      ;;
       january | february | march | april | \
       may | june | july | august | \
       september | october | november | december )
-         review_month $PARAM $2
+         list_month $PARAM $2
       ;;
       * )
-         view_page "$*" || echo "Invalid parameter $@"
+         echo "Invalid parameter: $@" 1>&2
+         exit 1
       ;;
    esac
 fi

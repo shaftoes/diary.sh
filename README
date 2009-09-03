@@ -13,7 +13,7 @@ Requirements:
 diary is a shell script that uses a number of common programs.  These
 include:
 
-   bash, xprop, grep, egrep, cut, sed, cat, chmod, date, expand, cp,
+   bash, xprop, grep, egrep, cut, sed, cat, chmod, date, cp,
    rm, sort, tail, ls, xargs, and less.
 
 Reasonably recent versions of these utilities (diary had been functional

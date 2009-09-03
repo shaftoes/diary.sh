@@ -20,9 +20,6 @@ PAGEDIR="$DIARYDIR/pages"
 #  The following are can be overidden in the user's diaryrc file
 #
 
-#  Number of spaces per tab
-SPERTAB=3
-
 #  Save the current xterm label
 XTITLE=
 if [ "$TERM" == "xterm" ]; then
@@ -36,7 +33,7 @@ fi
 #  Respect the EDITOR environment variable, if it exists
 if [ "$EDITOR" = "" ]; then
    EDITOR="/usr/bin/vim"
-   EDIT_OPTIONS="-c :$ -c \"set tabstop=$SPERTAB textwidth=80 fen fdm=marker\""
+   EDIT_OPTIONS="-c :$ -c \"set textwidth=80 fen fdm=marker\""
 fi
 
 # Less configuration variables
@@ -156,7 +153,7 @@ entry_review ()
       # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=459413.
       #
    echo "===== $HEADER ========================================"
-   [ -f $FILEPATH ] && expand -$SPERTAB $FILEPATH | grep -v "^ *$HEADER *$"
+   [ -f $FILEPATH ] && grep -v "^ *$HEADER *$" $FILEPATH
    echo
 }
 

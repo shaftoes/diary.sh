@@ -97,7 +97,7 @@ _entry_ensure_exists ()
 
    DIR=`dirname $FILEPATH`
 
-   chmod u+w $PAGEDIR
+   chmod -R u+w $PAGEDIR
    [ -d "$DIR" ] || mkdir -p $DIR
    chmod u+w $DIR
 

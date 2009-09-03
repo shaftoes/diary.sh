@@ -1,5 +1,8 @@
-Diary 0.1
-==========
+Diary-f 0.1
+===========
+
+Diary-f is a fork of diary program written by Jamie Briggs. Diary program's
+homepage is http://sourceforge.net/projects/diary/ .
 
 Diary is a console-based diary that leverages the capabilities of
 the Unix toolbox, using date, grep, less and a host of others -- as well as
@@ -40,5 +43,6 @@ See diary(1).
 
 Reporting bugs:
 ----------------
-Please use the Sourceforge:  http://sourceforge.net/projects/diary/
-Or you can email me directly:  jamie.briggs@computalog.com
+Please use GitHub's issue tracker:  http://github.com/earshinov/diary-f/
+Or you can email me directly:  earshinov@gmail.com
+

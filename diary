@@ -1,16 +1,16 @@
 #!/bin/bash
 #
-#  diary
+#  diary-f
 #
-#  A simple program to keep track of daily events.  Editing is allowed only
-#  on the current day's page (unless you cheat).
+#  A simple program to keep track of daily events.
 #
 #  Creates a directory, ".diary", in the users home directory.  Individual pages
 #  are stored in ".diary/pages"
 #
 #  Use "diary usage" to see examples of the command set.
 #
-#  Written by Jamie Briggs <jamie.briggs@computalog.com>
+#  Initially written by Jamie Briggs <jamie.briggs@computalog.com>
+#  and forked by Eugene Arshinov <earshinov@gmail.com> for personal use.
 #
 
 DIARYDIR="$HOME/.diary"

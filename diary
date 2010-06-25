@@ -416,7 +416,7 @@ elif [ $# = 1 ]; then
          list_month $PARAM
       ;;
       * )
-         echo "Invalid parameter: $@" 1>&2
+         echo "Invalid parameter: $@" >&2
          exit 1
       ;;
    esac
@@ -461,9 +461,8 @@ else
          list_month $PARAM $2
       ;;
       * )
-         echo "Invalid parameter: $@" 1>&2
+         echo "Invalid parameter: $@" >&2
          exit 1
       ;;
    esac
 fi
-

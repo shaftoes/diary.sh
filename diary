@@ -78,13 +78,6 @@ header_today ()
 
 # --------------------
 
-tmp ()
-{
-  echo $DIARYDIR/`date --date="$1" '+%Y.%m.%d'`.$$
-}
-
-# --------------------
-
 _entry_filepath ()
 {
    echo $PAGEDIR/$1.cal
@@ -111,12 +104,7 @@ _entry_change ()
    _entry_ensure_exists $FILE
 
    FILEPATH=`_entry_filepath $FILE`
-   TMP=`tmp $FILE`.cheat
-
-   cp $FILEPATH $TMP
-   eval $CALLBACK $FILE $TMP $@
-   cp $TMP $FILEPATH
-   rm -f $TMP
+   eval $CALLBACK $FILE $FILEPATH $@
 }
 
 entry ()

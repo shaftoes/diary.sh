@@ -86,13 +86,20 @@ _entry_filepath ()
 _entry_ensure_exists ()
 {
    FILEPATH=`_entry_filepath $1`
-   [ -f $FILEPATH ] && return
+   if [ -f $FILEPATH ]
+   then
+      echo 'existing'
+      return
+   fi
 
    DIR=`dirname $FILEPATH`
    mkdir -p $DIR
 
    echo "                         `header $1`" > $FILEPATH
    echo >> $FILEPATH
+
+   echo 'new'
+   return
 }
 
 _entry_change ()
@@ -101,10 +108,10 @@ _entry_change ()
    CALLBACK=$2
    shift 2
 
-   _entry_ensure_exists $FILE
+   STATUS=$(_entry_ensure_exists $FILE)
 
    FILEPATH=`_entry_filepath $FILE`
-   eval $CALLBACK $FILE $FILEPATH $@
+   eval $CALLBACK $FILE $FILEPATH $STATUS $@
 }
 
 entry ()
@@ -149,9 +156,8 @@ entry_view ()
 
 _entry_add_entry ()
 {
-   DATE=$1
    FILE=$2
-   shift 2
+   shift 3
 
    echo `date +%H:%M` $@ >> $FILE
 }
@@ -166,9 +172,28 @@ entry_add_entry ()
 
 _entry_edit ()
 {
-   label_xterm "Diary: edit $1"
-   $EDITOR $EDIT_OPTIONS $2
+   FILE=$1
+   FILEPATH=$2
+   STATUS=$3
+
+   OLD_TIMESTAMP=$(stat -c %Y $FILEPATH)
+   label_xterm "Diary: edit $FILE"
+   $EDITOR $EDIT_OPTIONS $FILEPATH
    label_xterm $XTITLE
+   NEW_TIMESTAMP=$(stat -c %Y $FILEPATH)
+
+   if [ $STATUS = 'new' -a $NEW_TIMESTAMP -eq $OLD_TIMESTAMP ]
+   then
+      rm -f $FILEPATH
+
+      # remove empty directories
+      while true
+      do
+        FILEPATH=$(dirname $FILEPATH)
+        [ $FILEPATH == $PAGEDIR ] && break
+        rmdir $FILEPATH &>/dev/null || break
+      done
+   fi
 }
 
 entry_edit ()

@@ -96,15 +96,10 @@ _entry_ensure_exists ()
    [ -f $FILEPATH ] && return
 
    DIR=`dirname $FILEPATH`
-
-   chmod -R u+w $PAGEDIR
-   [ -d "$DIR" ] || mkdir -p $DIR
-   chmod u+w $DIR
+   mkdir -p $DIR
 
    echo "                         `header $1`" > $FILEPATH
    echo >> $FILEPATH
-
-   chmod -R a-w $PAGEDIR
 }
 
 _entry_change ()
@@ -119,14 +114,9 @@ _entry_change ()
    TMP=`tmp $FILE`.cheat
 
    cp $FILEPATH $TMP
-   chmod u+w $TMP
-
    eval $CALLBACK $FILE $TMP $@
-
-   chmod u+w $FILEPATH
    cp $TMP $FILEPATH
    rm -f $TMP
-   chmod -R a-w $PAGEDIR
 }
 
 entry ()
@@ -246,21 +236,16 @@ refile_old_pages ()
 {
    echo -n "Reorganizing page structure ... "
 
-   chmod -R u+w $PAGEDIR
-
    for fil in `get_old_pages`; do
       FPATH=`echo $fil |
              sed -e 's:\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\):\1\/\2\/\3:'`
       FPATH=$FPATH.cal
       MONTHDIR=`dirname $FPATH`
 
-      [ -d $MONTHDIR ] || mkdir -p $MONTHDIR
+      mkdir -p $MONTHDIR
       mv $fil $FPATH
       echo -n .
-
    done
-
-   chmod -R a-w $PAGEDIR
 }
 
 # --------------------
@@ -379,13 +364,13 @@ search_diary ()
 ################################################################################
 
 #  Handle first time use
-[ -d $PAGEDIR ] || mkdir -p $PAGEDIR
+mkdir -p $PAGEDIR
 
 #  Handle conversion from old format
 [ -n "`get_old_pages`" ] && refile_old_pages
 
 if [ $# = 0 ]; then
-  edit_diary
+   edit_diary
 elif [ $# = 1 ]; then
    PARAM=`echo $1 | tr A-Z a-z`
    case $PARAM in

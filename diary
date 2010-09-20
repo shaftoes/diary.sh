@@ -50,10 +50,30 @@ LESSOPTS=$DIARYDIR/.less_srch
 # functions
 ################################################################################
 
-label_xterm()
+label_xterm ()
 {
    if [ ! -z "$XTITLE" ]; then
       echo -n "]0;$1"
+   fi
+}
+
+# `read' that does not split input string into array
+dumb_read ()
+{
+   local OLD_IFS=$IFS
+   IFS=''
+   read "$@"
+   local SUCCESS=$?
+   IFS=$OLD_IFS
+   return $SUCCESS
+}
+
+# `less' that does not actually run if nothing is to be displayed
+smart_less ()
+{
+   if dumb_read line
+   then
+      (echo "$line"; cat) | less
    fi
 }
 
@@ -126,26 +146,11 @@ entry_cat ()
    return $?
 }
 
-entry_review ()
-{
-   HEADER=`header $1`
-   FILEPATH=`_entry_filepath $1`
-
-      #
-      # Don't specify field width here because it's almost useless
-      # as printf does not understand UTF-8 characters
-      # (it actually counts bytes, not characters). See
-      # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=459413.
-      #
-   echo "===== $HEADER ========================================"
-   [ -f $FILEPATH ] && grep -v "^ *$HEADER *$" $FILEPATH
-   echo
-}
-
 entry_view ()
 {
    FILEPATH=`_entry_filepath $1`
-   if [ -f $FILEPATH ]; then
+   if [ -f $FILEPATH ]
+   then
       label_xterm "Diary: view $1"
       less -c +g $FILEPATH
       label_xterm $XTITLE
@@ -296,11 +301,12 @@ review_diary ()
       fi
    fi
 
-   echo
-   while [ $DAY -gt 0 ]; do
-      let DAY=DAY-1
-      entry_review $(entry $(unified_date "$DAY days ago"))
-   done
+   label_xterm "Diary: review $DAY day(s)"
+   ( while [ $DAY -gt 0 ]; do
+        let DAY=DAY-1
+        entry_cat $(entry $(unified_date "$DAY days ago")) && echo
+     done ) | smart_less
+   label_xterm $XTITLE
 }
 
 list_diary ()

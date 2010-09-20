@@ -84,16 +84,9 @@ unified_date ()
    DATE=`date '+%Y/%m/%d' --date="$1"` && echo $DATE || return 1
 }
 
-# --------------------
-
 header ()
 {
    date --date="$1" '+%A, %x'
-}
-
-header_today ()
-{
-   header ''
 }
 
 # --------------------

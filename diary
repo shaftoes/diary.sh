@@ -77,6 +77,12 @@ smart_less ()
    fi
 }
 
+timestamp()
+{
+  # Strip possible floating part (it is present at least in GNU coreutils 8.6)
+  stat -c %Y "$1" | cut -f1 -d.
+}
+
 # --------------------
 
 unified_date ()
@@ -174,11 +180,11 @@ _entry_edit ()
    FILEPATH=$2
    STATUS=$3
 
-   OLD_TIMESTAMP=$(stat -c %Y $FILEPATH)
+   OLD_TIMESTAMP=$(timestamp $FILEPATH)
    label_xterm "Diary: edit $FILE"
    $EDITOR $EDIT_OPTIONS $FILEPATH
    label_xterm $XTITLE
-   NEW_TIMESTAMP=$(stat -c %Y $FILEPATH)
+   NEW_TIMESTAMP=$(timestamp $FILEPATH)
 
    if [ $STATUS = 'new' -a $NEW_TIMESTAMP -eq $OLD_TIMESTAMP ]
    then

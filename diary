@@ -90,6 +90,15 @@ unified_date ()
    DATE=`date '+%Y/%m/%d' --date="$1"` && echo $DATE || return 1
 }
 
+user_date ()
+{
+  # Make it possible for a user to specify dates in his locale's format
+  # if `strptime' helper utility is available
+  unified_date "$1" 2>/dev/null ||
+  strptime '%x' '%Y/%m/%d' <<< "$1" 2>/dev/null ||
+  ( echo "Invalid date \"$1\"" >&2; return 1 )
+}
+
 header ()
 {
    date --date="$1" '+%A, %x'
@@ -269,17 +278,17 @@ refile_old_pages ()
 
 cat_page ()
 {
-   DATE=`unified_date "$*"` && entry_cat `entry $DATE` || return 1
+   DATE=`user_date "$*"` && entry_cat `entry $DATE` || return 1
 }
 
 view_page ()
 {
-   DATE=`unified_date "$*"` && entry_view `entry $DATE` || return 1
+   DATE=`user_date "$*"` && entry_view `entry $DATE` || return 1
 }
 
 edit_diary ()
 {
-   DATE=`unified_date "$*"` && entry_edit `entry $DATE` || return 1
+   DATE=`user_date "$*"` && entry_edit `entry $DATE` || return 1
 }
 
 add_entry ()

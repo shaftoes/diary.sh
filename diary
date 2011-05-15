@@ -139,7 +139,7 @@ _entry_change ()
    STATUS=$(_entry_ensure_exists $FILE)
 
    FILEPATH=`_entry_filepath $FILE`
-   eval $CALLBACK $FILE $FILEPATH $STATUS $(printf '%q' "$@")
+   eval $CALLBACK $FILE $FILEPATH $STATUS $(printf '%q' "$*")
 }
 
 entry ()

@@ -63,6 +63,19 @@ timestamp()
   stat -c %Y "$1" | cut -f1 -d.
 }
 
+# Extract a portion of lines, beginning with line "$BEGIN"
+# and ending with line "$END" (inclusive)
+filter_list() {
+   AWK_PROGRAM='
+      BEGIN { m=0; }
+      {
+         if (!m && $0 >= b) m=1;
+         if (m && e != "" && $0 > e) exit;
+         if (m) print;
+      }'
+   awk -vb="$1" -ve="$2" "$AWK_PROGRAM"
+}
+
 # ======================================================================
 # Date functions
 # ======================================================================
@@ -214,18 +227,86 @@ entry_add_entry ()
 # Diary - user frontend for operating diary
 # ======================================================================
 
-# Actions on particular entries
+# The `_diary_handle_interval` metafunction
 # ----------------------------------------------------------------------
+
+_diary_handle_interval ()
+{
+   CALLBACK_FOR_SINGLE_DATE=$1
+   CALLBACK_FOR_INTERVAL=$2
+   shift 2
+
+   # Split arguments on "-"
+   FIRST="1"
+   FIRST_DATE=""
+   SECOND_DATE=""
+   for arg; do
+      if [ "$arg" == "-" -a -n "$FIRST" ]; then
+         FIRST=""
+         continue
+      fi
+      [ -n "$FIRST" ] && FIRST_DATE="$FIRST_DATE $arg" || SECOND_DATE="$SECOND_DATE $arg"
+   done
+
+   # If there is no "-", run the callback for single date and return
+   FIRST_DATE=`user_date "$FIRST_DATE"` || return 1
+   SECOND_DATE=`user_date "$SECOND_DATE"` || return 1
+   if [ -n "$FIRST" ]; then
+      eval $CALLBACK_FOR_SINGLE_DATE "$FIRST_DATE"
+      return $?
+   fi
+
+   # Search for diary entries for dates withing the specified interval.
+   # If there are any entries, run the second callback passing found file names
+   builtin cd $PAGEDIR
+   FILES="`
+      find . -name '??.cal' | sort |
+      sed -e 's:^\./::; s:\.cal$::' |
+      filter_list $FIRST_DATE $SECOND_DATE |
+      sed -e 's:$:.cal:'`"
+   if [ -n "$FILES" ]; then
+      eval $CALLBACK_FOR_INTERVAL $FIRST_DATE $SECOND_DATE $FILES
+   fi
+}
+
+# The "cat" action
+# ----------------------------------------------------------------------
+
+_diary_cat_interval ()
+{
+   shift 2
+   for file; do
+      cat "$file"
+      echo
+   done
+}
 
 diary_cat ()
 {
-   DATE=`user_date "$*"` && entry_cat $DATE || return 1
+   _diary_handle_interval entry_cat _diary_cat_interval "$@"
+}
+
+# The "view" action
+# ----------------------------------------------------------------------
+
+_diary_view_interval ()
+{
+   FIRST_DATE=$1
+   SECOND_DATE=$2
+   shift 2
+
+   label_xterm "Diary: view $FIRST_DATE - $SECOND_DATE"
+   less "$@"
+   label_xterm $XTITLE
 }
 
 diary_view ()
 {
-   DATE=`user_date "$*"` && entry_view $DATE || return 1
+   _diary_handle_interval entry_view _diary_view_interval "$@"
 }
+
+# Editing actions
+# ----------------------------------------------------------------------
 
 diary_edit ()
 {
@@ -297,27 +378,26 @@ refile_old_pages ()
 
 usage ()
 {
-   cat << ENDUSAGE
+   cat << 'ENDUSAGE'
 Examples:
 
-  diary                  - open today's page for editing
-  diary entry Hi World   - add a line to today's diary page
+  diary                       - open today's page for editing
+  diary edit yesterday        - this is cheating! ... but you can edit
+                                past entries if you really want to
 
-  diary cat              - dump today's page to stdout
-  diary cat last monday  - dump last Monday's page to stdout
+  diary entry Hi World        - add a line to today's diary page
 
-  diary view             - view today's page
-  diary view 10/15/99    - open october 15, 1999 page for viewing
-  diary view 2 days ago  - view the day before yesterday's page
+  diary cat                   - dump today's page to stdout
+  diary cat last Monday       - dump last Monday's page to stdout
+  diary cat last Mon - today  - dump entries from last Monday till today
+  diary view <...>            - equivalent to `diary cat`, but opens
+                                matching entries for viewing
 
-  diary edit yesterday   - this is cheating! ... but you can edit
-                           past entries if you really want to
-
-  diary grep [Ff]ind     - grep pages for lines containing find or Find
-  diary grep -F Find     - search for fixed string (options are passed
-                           directly to grep)
-  diary search "^Fixed"  - open pages for viewing that contain
-                           lines that start with "Fixed"
+  diary grep [Ff]ind          - grep pages for lines containing find or Find
+  diary grep -F Find          - search for fixed string (options are passed
+                                directly to grep)
+  diary search "^Fixed"       - open pages for viewing that contain
+                                lines that start with "Fixed"
 ENDUSAGE
 }
 

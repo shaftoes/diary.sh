@@ -142,11 +142,6 @@ _entry_change ()
    eval $CALLBACK $FILE $FILEPATH $STATUS $(printf '%q' "$*")
 }
 
-entry ()
-{
-  echo $1
-}
-
 entry_cat ()
 {
    FILEPATH=`_entry_filepath $1`
@@ -278,22 +273,22 @@ refile_old_pages ()
 
 cat_page ()
 {
-   DATE=`user_date "$*"` && entry_cat `entry $DATE` || return 1
+   DATE=`user_date "$*"` && entry_cat $DATE || return 1
 }
 
 view_page ()
 {
-   DATE=`user_date "$*"` && entry_view `entry $DATE` || return 1
+   DATE=`user_date "$*"` && entry_view $DATE || return 1
 }
 
 edit_diary ()
 {
-   DATE=`user_date "$*"` && entry_edit `entry $DATE` || return 1
+   DATE=`user_date "$*"` && entry_edit $DATE || return 1
 }
 
 add_entry ()
 {
-   entry_add_entry $(entry $(unified_date)) $@ || return 1
+   entry_add_entry $(unified_date) $@ || return 1
 }
 
 # --------------------
@@ -312,7 +307,7 @@ review_diary ()
    label_xterm "Diary: review $DAY day(s)"
    ( while [ $DAY -gt 0 ]; do
         let DAY=DAY-1
-        entry_cat $(entry $(unified_date "$DAY days ago")) && echo
+        entry_cat $(unified_date "$DAY days ago") && echo
      done ) | smart_less
    label_xterm $XTITLE
 }
@@ -332,7 +327,7 @@ list_diary ()
    builtin cd $PAGEDIR
    for fil in `find . -name '??.cal' | sort | tail -$PAGES`; do
       DATE=`echo $fil | sed -e 's:\.cal::; s:^\./::'`
-      entry_review `entry $DATE`
+      entry_review $DATE
    done
 }
 
@@ -354,7 +349,7 @@ list_month ()
    builtin cd $PAGEDIR
    for fil in `ls $YEAR/$MONTH/??.cal | sort`; do
       DATE=`echo $fil | sed -e 's:\.cal::'`
-      entry_review `entry $DATE`
+      entry_review $DATE
    done
 }
 

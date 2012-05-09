@@ -46,9 +46,9 @@ FWDKEY=i
 LESSKEY=$DIARYDIR/lesskey
 LESSOPTS=$DIARYDIR/.less_srch
 
-################################################################################
-# functions
-################################################################################
+# ======================================================================
+# Utility functions
+# ======================================================================
 
 label_xterm ()
 {
@@ -63,17 +63,20 @@ timestamp()
   stat -c %Y "$1" | cut -f1 -d.
 }
 
-# --------------------
+# ======================================================================
+# Date functions
+# ======================================================================
 
+# Returns date in the format of calendar file's filename
 unified_date ()
 {
    DATE=`date '+%Y/%m/%d' --date="$1"` && echo $DATE || return 1
 }
 
+# if `strptime` utility is available, use it to recognize dates
+# specified in user's locale format
 user_date ()
 {
-  # Make it possible for a user to specify dates in his locale's format
-  # if `strptime' helper utility is available
   unified_date "$1" 2>/dev/null ||
   strptime '%x' '%Y/%m/%d' <<< "$1" 2>/dev/null ||
   ( echo "Invalid date \"$1\"" >&2; return 1 )
@@ -84,12 +87,21 @@ header ()
    date --date="$1" '+%A, %x'
 }
 
-# --------------------
+# ======================================================================
+# Entry - dealing with particular diary entries
+# ======================================================================
+# every public method should take $FILE as its first argument!
+
+# Utility functions
+# ----------------------------------------------------------------------
 
 _entry_filepath ()
 {
    echo $PAGEDIR/$1.cal
 }
+
+# The `_entry_change` metafunction
+# ----------------------------------------------------------------------
 
 _entry_ensure_exists ()
 {
@@ -122,6 +134,9 @@ _entry_change ()
    eval $CALLBACK $FILE $FILEPATH $STATUS $(printf '%q' "$*")
 }
 
+# Viewing actions
+# ----------------------------------------------------------------------
+
 entry_cat ()
 {
    FILEPATH=`_entry_filepath $1`
@@ -142,21 +157,8 @@ entry_view ()
    return 1
 }
 
-_entry_add_entry ()
-{
-   FILE=$2
-   shift 3
-
-   echo `date +%H:%M` $@ >> $FILE
-}
-
-entry_add_entry ()
-{
-   FILE=$1
-   shift
-
-   _entry_change $FILE _entry_add_entry $@
-}
+# The "edit" action
+# ----------------------------------------------------------------------
 
 _entry_edit ()
 {
@@ -189,9 +191,109 @@ entry_edit ()
    _entry_change $1 _entry_edit
 }
 
-################################################################################
-# core functions
-################################################################################
+# The "entry" action
+# ----------------------------------------------------------------------
+
+_entry_add_entry ()
+{
+   FILE=$2
+   shift 3
+
+   echo `date +%H:%M` $@ >> $FILE
+}
+
+entry_add_entry ()
+{
+   FILE=$1
+   shift
+
+   _entry_change $FILE _entry_add_entry $@
+}
+
+# ======================================================================
+# Diary - user frontend for operating diary
+# ======================================================================
+
+# Actions on particular entries
+# ----------------------------------------------------------------------
+
+diary_cat ()
+{
+   DATE=`user_date "$*"` && entry_cat $DATE || return 1
+}
+
+diary_view ()
+{
+   DATE=`user_date "$*"` && entry_view $DATE || return 1
+}
+
+diary_edit ()
+{
+   DATE=`user_date "$*"` && entry_edit $DATE || return 1
+}
+
+diary_add_entry ()
+{
+   entry_add_entry $(unified_date) $@ || return 1
+}
+
+# Searching
+# ----------------------------------------------------------------------
+
+diary_grep ()
+{
+   builtin cd $PAGEDIR
+   grep "$@" `find . -name '??.cal' | sed 's:^\./::' | sort`
+}
+
+diary_search ()
+{
+   if [ ! -f $LESSOPTS ] || [ $LESSOPTS -ot $0 ]; then
+      {
+         echo #command
+         echo $BACKKEY    next-file
+         echo $FWDKEY   prev-file
+      } > $LESSKEY
+      lesskey -o $LESSOPTS $LESSKEY
+      rm $LESSKEY
+   fi
+
+   builtin cd $PAGEDIR
+   label_xterm "Diary: search for $*"
+   egrep --files-with-matches "$*" `find . -name '??.cal' | sort -r` |
+      xargs less -P'"u" for older, "i" for newer' -k$LESSOPTS +"/$*
+" ++g
+   label_xterm $XTITLE
+}
+
+# ======================================================================
+# Dealing with the old pages format
+# ======================================================================
+
+get_old_pages ()
+{
+   find $PAGEDIR -maxdepth 1 -name '????.??.??'
+}
+
+refile_old_pages ()
+{
+   echo -n "Reorganizing page structure ... "
+
+   for fil in `get_old_pages`; do
+      FPATH=`echo $fil |
+             sed -e 's:\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\):\1\/\2\/\3:'`
+      FPATH=$FPATH.cal
+      MONTHDIR=`dirname $FPATH`
+
+      mkdir -p $MONTHDIR
+      mv $fil $FPATH
+      echo -n .
+   done
+}
+
+# ======================================================================
+# Usage
+# ======================================================================
 
 usage ()
 {
@@ -219,82 +321,9 @@ Examples:
 ENDUSAGE
 }
 
-# --------------------
-
-get_old_pages ()
-{
-   find $PAGEDIR -maxdepth 1 -name '????.??.??'
-}
-
-refile_old_pages ()
-{
-   echo -n "Reorganizing page structure ... "
-
-   for fil in `get_old_pages`; do
-      FPATH=`echo $fil |
-             sed -e 's:\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\):\1\/\2\/\3:'`
-      FPATH=$FPATH.cal
-      MONTHDIR=`dirname $FPATH`
-
-      mkdir -p $MONTHDIR
-      mv $fil $FPATH
-      echo -n .
-   done
-}
-
-# --------------------
-
-cat_page ()
-{
-   DATE=`user_date "$*"` && entry_cat $DATE || return 1
-}
-
-view_page ()
-{
-   DATE=`user_date "$*"` && entry_view $DATE || return 1
-}
-
-edit_diary ()
-{
-   DATE=`user_date "$*"` && entry_edit $DATE || return 1
-}
-
-add_entry ()
-{
-   entry_add_entry $(unified_date) $@ || return 1
-}
-
-# --------------------
-
-grep_diary ()
-{
-   builtin cd $PAGEDIR
-   grep "$@" `find . -name '??.cal' | sed 's:^\./::' | sort`
-}
-
-search_diary ()
-{
-   if [ ! -f $LESSOPTS ] || [ $LESSOPTS -ot $0 ]; then
-      {
-         echo #command
-         echo $BACKKEY    next-file
-         echo $FWDKEY   prev-file
-      } > $LESSKEY
-      lesskey -o $LESSOPTS $LESSKEY
-      rm $LESSKEY
-   fi
-
-   builtin cd $PAGEDIR
-   label_xterm "Diary: search for $*"
-   egrep --files-with-matches "$*" `find . -name '??.cal' | sort -r` |
-      xargs less -P'"u" for older, "i" for newer' -k$LESSOPTS +"/$*
-" ++g
-   label_xterm $XTITLE
-}
-
-################################################################################
-# main
-################################################################################
+# ======================================================================
+# The main function
+# ======================================================================
 
 #  Handle first time use
 mkdir -p $PAGEDIR
@@ -303,7 +332,7 @@ mkdir -p $PAGEDIR
 [ -n "`get_old_pages`" ] && refile_old_pages
 
 if [ $# = 0 ]; then
-   edit_diary
+   diary_edit
 elif [ $# = 1 ]; then
    PARAM=`echo $1 | tr A-Z a-z`
    case $PARAM in
@@ -311,13 +340,13 @@ elif [ $# = 1 ]; then
          usage
       ;;
       cat )
-         cat_page
+         diary_cat
       ;;
       view )
-         view_page
+         diary_view
       ;;
       edit )
-         edit_diary
+         diary_edit
       ;;
       grep | search )
          echo "You need to specify search terms."
@@ -332,27 +361,27 @@ else
    case $PARAM in
       entry )
          shift
-         add_entry $@
+         diary_add_entry $@
       ;;
       cat )
          shift
-         cat_page $@
+         diary_cat $@
       ;;
       view )
          shift
-         view_page $@
+         diary_view $@
       ;;
       edit )
          shift
-         edit_diary $@
+         diary_edit $@
       ;;
       grep )
          shift
-         grep_diary "$@"
+         diary_grep "$@"
       ;;
       search )
          shift
-         search_diary $@
+         diary_search $@
       ;;
       * )
          echo "Invalid parameter: $@" >&2

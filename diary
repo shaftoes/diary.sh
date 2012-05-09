@@ -57,26 +57,6 @@ label_xterm ()
    fi
 }
 
-# `read' that does not split input string into array
-dumb_read ()
-{
-   local OLD_IFS=$IFS
-   IFS=''
-   read "$@"
-   local SUCCESS=$?
-   IFS=$OLD_IFS
-   return $SUCCESS
-}
-
-# `less' that does not actually run if nothing is to be displayed
-smart_less ()
-{
-   if dumb_read line
-   then
-      (echo "$line"; cat) | less
-   fi
-}
-
 timestamp()
 {
   # Strip possible floating part (it is present at least in GNU coreutils 8.6)
@@ -231,13 +211,6 @@ Examples:
   diary edit yesterday   - this is cheating! ... but you can edit
                            past entries if you really want to
 
-  diary list 5           - output the last 5 non-blank pages
-  diary october          - output all of the past October's non-blank pages
-  diary october 2000     - output all of year 2000 October's non-blank pages
-
-  diary review           - output entries for the last week
-  diary review 3         - output entries for the last 3 calendar days
-
   diary grep [Ff]ind     - grep pages for lines containing find or Find
   diary grep -F Find     - search for fixed string (options are passed
                            directly to grep)
@@ -289,68 +262,6 @@ edit_diary ()
 add_entry ()
 {
    entry_add_entry $(unified_date) $@ || return 1
-}
-
-# --------------------
-
-review_diary ()
-{
-   DAY=7
-   if [ -n "$1" ]; then
-      DAY=$1
-      if [ $1 -le 0 ]; then
-         echo "Invalid number of days: $1"
-         return 1
-      fi
-   fi
-
-   label_xterm "Diary: review $DAY day(s)"
-   ( while [ $DAY -gt 0 ]; do
-        let DAY=DAY-1
-        entry_cat $(unified_date "$DAY days ago") && echo
-     done ) | smart_less
-   label_xterm $XTITLE
-}
-
-list_diary ()
-{
-   PAGES=7
-   if [ -n "$1" ]; then
-      PAGES=$1
-      if [ $PAGES -le 0 ]; then
-         echo "Invalid number of pages: $1"
-         return 1
-      fi
-   fi
-
-   echo
-   builtin cd $PAGEDIR
-   for fil in `find . -name '??.cal' | sort | tail -$PAGES`; do
-      DATE=`echo $fil | sed -e 's:\.cal::; s:^\./::'`
-      entry_review $DATE
-   done
-}
-
-list_month ()
-{
-   MONTH=`date --date="$1 1" +%m`
-
-   if [ -n "$2" ]; then
-      YEAR=$2
-   else
-      YEAR=`date +%Y`
-      THIS_MONTH=`date +%m`
-      if [ $MONTH -gt $THIS_MONTH ]; then
-         let YEAR=YEAR-1
-      fi
-   fi
-
-   echo
-   builtin cd $PAGEDIR
-   for fil in `ls $YEAR/$MONTH/??.cal | sort`; do
-      DATE=`echo $fil | sed -e 's:\.cal::'`
-      entry_review $DATE
-   done
 }
 
 # --------------------
@@ -408,19 +319,8 @@ elif [ $# = 1 ]; then
       edit )
          edit_diary
       ;;
-      list )
-         list_diary
-      ;;
-      review )
-         review_diary
-      ;;
       grep | search )
          echo "You need to specify search terms."
-      ;;
-      january | february | march | april | \
-      may | june | july | august | \
-      september | october | november | december )
-         list_month $PARAM
       ;;
       * )
          echo "Invalid parameter: $@" >&2
@@ -446,14 +346,6 @@ else
          shift
          edit_diary $@
       ;;
-      list )
-         shift
-         list_diary $@
-      ;;
-      review )
-         shift
-         review_diary $@
-      ;;
       grep )
          shift
          grep_diary "$@"
@@ -461,11 +353,6 @@ else
       search )
          shift
          search_diary $@
-      ;;
-      january | february | march | april | \
-      may | june | july | august | \
-      september | october | november | december )
-         list_month $PARAM $2
       ;;
       * )
          echo "Invalid parameter: $@" >&2

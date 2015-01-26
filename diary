@@ -60,6 +60,12 @@ label_xterm ()
    fi
 }
 
+#
+# Get timestamp of file under path
+#
+# Arguments:
+#   1) Filepath
+#
 timestamp()
 {
   # Strip possible floating part (it is present at least in GNU coreutils 8.6)

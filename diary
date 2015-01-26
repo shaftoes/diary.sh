@@ -101,7 +101,9 @@ filter_list() {
 # Date functions
 # ======================================================================
 
+#
 # Returns date in the format of calendar file's filename
+#
 unified_date ()
 {
    DATE=`date '+%Y/%m/%d' --date="$1"` && echo $DATE || return 1

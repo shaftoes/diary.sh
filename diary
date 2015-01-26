@@ -72,8 +72,20 @@ timestamp()
   stat -c %Y "$1" | cut -f1 -d.
 }
 
+#
 # Extract a portion of lines, beginning with line "$BEGIN"
 # and ending with line "$END" (inclusive)
+#
+# Arguments:
+#   1) variable "b" in program, lines starting with this...
+#   2) variable "e" in program, lines ending with this...
+#
+# will be filtered:
+
+#   echo abc hi there | filter_list abc re #-> abc hi there
+#   echo abc hi there | filter_list abc XX #-> abc hi there
+#   echo abc hi there | filter_list ccc XX #->
+#
 filter_list() {
    AWK_PROGRAM='
       BEGIN { m=0; }

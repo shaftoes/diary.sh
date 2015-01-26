@@ -273,6 +273,14 @@ _entry_edit ()
    fi
 }
 
+#
+# Edit an entry
+#
+# Use _entry_change with the _entry_edit callback to edit an entry
+#
+# Arguments:
+#   1) File to change
+#
 entry_edit ()
 {
    _entry_change $1 _entry_edit

@@ -110,14 +110,14 @@ filter_list() {
 # Returns date in the format of calendar file's filename
 #
 unified_date() {
-   DATE=`date '+%Y/%m/%d' --date="$1"` && echo $DATE || return 1
+   DATE=`date '+%Y/%m/%d/%H:%M:%S' --date="$1"` && echo $DATE || return 1
 }
 
 # if `strptime` utility is available, use it to recognize dates
 # specified in user's locale format
 user_date() {
   unified_date "$1" 2>/dev/null ||
-  strptime '%x' '%Y/%m/%d' <<< "$1" 2>/dev/null ||
+  strptime '%x' '%Y/%m/%d/%H:%M:%S' <<< "$1" 2>/dev/null ||
   ( echo "Invalid date \"$1\"" >&2; return 1 )
 }
 

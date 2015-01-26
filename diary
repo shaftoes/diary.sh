@@ -413,6 +413,14 @@ diary_cat ()
 # The "view" action
 # ----------------------------------------------------------------------
 
+#
+# Callback: View an interval of files
+#
+# Arguments:
+#   1) The starting date
+#   2) The ending date
+#   *) File pathes
+#
 _diary_view_interval ()
 {
    FIRST_DATE=$1

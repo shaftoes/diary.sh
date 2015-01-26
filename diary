@@ -118,6 +118,12 @@ user_date ()
   ( echo "Invalid date \"$1\"" >&2; return 1 )
 }
 
+#
+# Returns the header date
+#
+# Arguments:
+#   1) Use this time to display in the header time format
+#
 header ()
 {
    date --date="$1" '+%A, %x'

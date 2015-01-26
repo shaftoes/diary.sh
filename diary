@@ -50,6 +50,9 @@ LESSOPTS=$DIARYDIR/.less_srch
 # Utility functions
 # ======================================================================
 
+#
+# Set the label of the xterm instance
+#
 label_xterm ()
 {
    if [ ! -z "$XTITLE" ]; then

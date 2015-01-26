@@ -474,6 +474,12 @@ diary_add_entry ()
 # Searching
 # ----------------------------------------------------------------------
 
+#
+# grep in the diary
+#
+# Arguments:
+#   *) grep arguments
+#
 diary_grep ()
 {
    builtin cd $PAGEDIR

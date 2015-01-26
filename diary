@@ -213,6 +213,12 @@ entry_cat ()
    return $?
 }
 
+#
+# Show an entry using `less`
+#
+# Arguments:
+#   1) The file name of the entry
+#
 entry_view ()
 {
    FILEPATH=`_entry_filepath $1`

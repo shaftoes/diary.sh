@@ -330,6 +330,16 @@ entry_add_entry ()
 # The `_diary_handle_interval` metafunction
 # ----------------------------------------------------------------------
 
+#
+# Call a function for an interval of dates
+#
+# Holy shit!
+#
+# Arguments:
+#   1) The function to call if there is only one date
+#   2) The function to call on several dates (an interval)
+#   3) Interval specification
+#
 _diary_handle_interval ()
 {
    CALLBACK_FOR_SINGLE_DATE=$1

@@ -173,6 +173,18 @@ _entry_ensure_exists ()
    return
 }
 
+#
+# Change an entry
+#
+# Arguments:
+#   1) File to change
+#   2) Callback to call for file with arguments:
+#       1) The file name
+#       2) The file path
+#       3) The status whether the file exists or not
+#       4) All additional parameters to the _entry_change() function itself
+#   *) Additional arguments to the callback function
+#
 _entry_change ()
 {
    FILE=$1

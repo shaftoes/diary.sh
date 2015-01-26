@@ -17,7 +17,12 @@
 #  parts and add new features.
 #
 
-DIARYDIR="$HOME/.diary"
+# Try the environement for DIARY_PATH, if there is nothing use $HOME/.diary
+DIARYDIR=$(printenv DIARY_PATH)
+if [ -z "$DIARYDIR" ]; then
+    DIARYDIR="$HOME/.diary"
+fi
+
 PAGEDIR="$DIARYDIR/pages"
 
 #

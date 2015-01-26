@@ -137,6 +137,12 @@ header ()
 # Utility functions
 # ----------------------------------------------------------------------
 
+#
+# Return the filepath of the entry
+#
+# Arguments:
+#   1) Name of the entry file
+#
 _entry_filepath ()
 {
    echo $PAGEDIR/$1.cal

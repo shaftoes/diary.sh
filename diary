@@ -50,6 +50,9 @@ LESSOPTS=$DIARYDIR/.less_srch
 # Utility functions
 # ======================================================================
 
+#
+# Set the label of the xterm instance
+#
 label_xterm ()
 {
    if [ ! -z "$XTITLE" ]; then
@@ -57,14 +60,32 @@ label_xterm ()
    fi
 }
 
+#
+# Get timestamp of file under path
+#
+# Arguments:
+#   1) Filepath
+#
 timestamp()
 {
   # Strip possible floating part (it is present at least in GNU coreutils 8.6)
   stat -c %Y "$1" | cut -f1 -d.
 }
 
+#
 # Extract a portion of lines, beginning with line "$BEGIN"
 # and ending with line "$END" (inclusive)
+#
+# Arguments:
+#   1) variable "b" in program, lines starting with this...
+#   2) variable "e" in program, lines ending with this...
+#
+# will be filtered:
+
+#   echo abc hi there | filter_list abc re #-> abc hi there
+#   echo abc hi there | filter_list abc XX #-> abc hi there
+#   echo abc hi there | filter_list ccc XX #->
+#
 filter_list() {
    AWK_PROGRAM='
       BEGIN { m=0; }
@@ -80,7 +101,9 @@ filter_list() {
 # Date functions
 # ======================================================================
 
+#
 # Returns date in the format of calendar file's filename
+#
 unified_date ()
 {
    DATE=`date '+%Y/%m/%d' --date="$1"` && echo $DATE || return 1
@@ -95,6 +118,12 @@ user_date ()
   ( echo "Invalid date \"$1\"" >&2; return 1 )
 }
 
+#
+# Returns the header date
+#
+# Arguments:
+#   1) Use this time to display in the header time format
+#
 header ()
 {
    date --date="$1" '+%A, %x'
@@ -108,14 +137,23 @@ header ()
 # Utility functions
 # ----------------------------------------------------------------------
 
+#
+# Return the filepath of the entry
+#
+# Arguments:
+#   1) Name of the entry file
+#
 _entry_filepath ()
 {
    echo $PAGEDIR/$1.cal
 }
 
-# The `_entry_change` metafunction
-# ----------------------------------------------------------------------
-
+#
+# Ensure an entry exists
+#
+# Arguments:
+#   1) File name for the entry to check
+#
 _entry_ensure_exists ()
 {
    FILEPATH=`_entry_filepath $1`
@@ -135,6 +173,18 @@ _entry_ensure_exists ()
    return
 }
 
+#
+# Change an entry
+#
+# Arguments:
+#   1) File to change
+#   2) Callback to call for file with arguments:
+#       1) The file name
+#       2) The file path
+#       3) The status whether the file exists or not
+#       4) All additional parameters to the _entry_change() function itself
+#   *) Additional arguments to the callback function
+#
 _entry_change ()
 {
    FILE=$1
@@ -150,6 +200,12 @@ _entry_change ()
 # Viewing actions
 # ----------------------------------------------------------------------
 
+#
+# Print an entry
+#
+# Arguments:
+#   1) The file name of the entry
+#
 entry_cat ()
 {
    FILEPATH=`_entry_filepath $1`
@@ -157,6 +213,12 @@ entry_cat ()
    return $?
 }
 
+#
+# Show an entry using `less`
+#
+# Arguments:
+#   1) The file name of the entry
+#
 entry_view ()
 {
    FILEPATH=`_entry_filepath $1`
@@ -173,6 +235,18 @@ entry_view ()
 # The "edit" action
 # ----------------------------------------------------------------------
 
+#
+# Callback: Edit an entry
+#
+# Calls the $EDITOR to edit an entry.
+# If the file wasn't edited and was newly created, the file gets removed and if
+# it was created in a new directory, it gets removed, too.
+#
+# Arguments:
+#   1) File name
+#   2) File path
+#   3) Status of the file
+#
 _entry_edit ()
 {
    FILE=$1
@@ -199,6 +273,14 @@ _entry_edit ()
    fi
 }
 
+#
+# Edit an entry
+#
+# Use _entry_change with the _entry_edit callback to edit an entry
+#
+# Arguments:
+#   1) File to change
+#
 entry_edit ()
 {
    _entry_change $1 _entry_edit
@@ -207,6 +289,16 @@ entry_edit ()
 # The "entry" action
 # ----------------------------------------------------------------------
 
+#
+# Callback: Add an entry
+#
+# Ignores the File name and the status whether the file exists or not but uses
+# the filepath of the file to write a date with the specified date entry and all
+# other arguments.
+#
+# Arguments:
+#   1) Filepath to write to
+#
 _entry_add_entry ()
 {
    FILE=$2
@@ -215,6 +307,14 @@ _entry_add_entry ()
    echo `date +%H:%M` $@ >> $FILE
 }
 
+#
+# Add an entry
+#
+# Arguments:
+#   1) The file to change/add
+#   2) Additional arguments to _entry_add_entry, to write to the file which is
+#   about to be created
+#
 entry_add_entry ()
 {
    FILE=$1
@@ -230,6 +330,16 @@ entry_add_entry ()
 # The `_diary_handle_interval` metafunction
 # ----------------------------------------------------------------------
 
+#
+# Call a function for an interval of dates
+#
+# Holy shit!
+#
+# Arguments:
+#   1) The function to call if there is only one date
+#   2) The function to call on several dates (an interval)
+#   3) Interval specification
+#
 _diary_handle_interval ()
 {
    CALLBACK_FOR_SINGLE_DATE=$1
@@ -272,6 +382,14 @@ _diary_handle_interval ()
 # The "cat" action
 # ----------------------------------------------------------------------
 
+#
+# Callback: Print all files which are specified in the arguments
+#
+# Arguments:
+#   1) <skipped>
+#   2) <skipped>
+#   *) File path to print
+#
 _diary_cat_interval ()
 {
    shift 2
@@ -281,6 +399,12 @@ _diary_cat_interval ()
    done
 }
 
+#
+# Cat entries from a certain interval
+#
+# Arguments:
+#   *) Interval specification
+#
 diary_cat ()
 {
    _diary_handle_interval entry_cat _diary_cat_interval "$@"
@@ -289,6 +413,14 @@ diary_cat ()
 # The "view" action
 # ----------------------------------------------------------------------
 
+#
+# Callback: View an interval of files
+#
+# Arguments:
+#   1) The starting date
+#   2) The ending date
+#   *) File pathes
+#
 _diary_view_interval ()
 {
    FIRST_DATE=$1
@@ -300,6 +432,15 @@ _diary_view_interval ()
    label_xterm $XTITLE
 }
 
+#
+# View diary entries
+#
+# Use _diary_handle_interval with either viewing a single entry or a list of
+# entries
+#
+# Arguments:
+#   *) interval specification
+#
 diary_view ()
 {
    _diary_handle_interval entry_view _diary_view_interval "$@"
@@ -308,11 +449,23 @@ diary_view ()
 # Editing actions
 # ----------------------------------------------------------------------
 
+#
+# Edit today
+#
+# Arguments:
+#   *) user_date() arguments
+#
 diary_edit ()
 {
    DATE=`user_date "$*"` && entry_edit $DATE || return 1
 }
 
+#
+# Edit an entry
+#
+# Arguments:
+#   *) Arguments for entry_add_entry()
+#
 diary_add_entry ()
 {
    entry_add_entry $(unified_date) $@ || return 1
@@ -321,12 +474,26 @@ diary_add_entry ()
 # Searching
 # ----------------------------------------------------------------------
 
+#
+# grep in the diary
+#
+# Arguments:
+#   *) grep arguments
+#
 diary_grep ()
 {
    builtin cd $PAGEDIR
    grep "$@" `find . -name '??.cal' | sed 's:^\./::' | sort`
 }
 
+#
+# Search in the diary
+#
+# Override the less options to have "u" for older entries and "i" for newer
+# entries, so we can switch through the entries using these keys.
+#
+# Arguments: Not figured out yet
+#
 diary_search ()
 {
    if [ ! -f $LESSOPTS ] || [ $LESSOPTS -ot $0 ]; then

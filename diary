@@ -460,6 +460,12 @@ diary_edit ()
    DATE=`user_date "$*"` && entry_edit $DATE || return 1
 }
 
+#
+# Edit an entry
+#
+# Arguments:
+#   *) Arguments for entry_add_entry()
+#
 diary_add_entry ()
 {
    entry_add_entry $(unified_date) $@ || return 1

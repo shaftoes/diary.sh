@@ -52,8 +52,8 @@ LESS_FWDKEY=i
 # Allow user to overide options
 . $DIARYDIR/diaryrc &>/dev/null
 
-LESSKEY=$DIARYDIR/lesskey
-LESSOPTS=$DIARYDIR/.less_srch
+LESSKEY_FILE=$DIARYDIR/lesskey
+LESSOPTS_FILE=$DIARYDIR/.less_srch
 
 # ======================================================================
 # Utility functions
@@ -503,20 +503,20 @@ diary_grep ()
 #
 diary_search ()
 {
-   if [ ! -f $LESSOPTS ] || [ $LESSOPTS -ot $0 ]; then
+   if [ ! -f $LESSOPTS_FILE ] || [ $LESSOPTS_FILE -ot $0 ]; then
       {
          echo #command
          echo $LESS_BACKKEY    next-file
          echo $LESS_FWDKEY   prev-file
-      } > $LESSKEY
-      lesskey -o $LESSOPTS $LESSKEY
-      rm $LESSKEY
+      } > $LESSKEY_FILE
+      lesskey -o $LESSOPTS_FILE $LESSKEY_FILE
+      rm $LESSKEY_FILE
    fi
 
    builtin cd $PAGEDIR
    label_xterm "Diary: search for $*"
    egrep --files-with-matches "$*" `find . -name '??.cal' | sort -r` |
-      xargs less -P'"u" for older, "i" for newer' -k$LESSOPTS +"/$*
+      xargs less -P'"u" for older, "i" for newer' -k$LESSOPTS_FILE +"/$*
 " ++g
    label_xterm $XTITLE
 }

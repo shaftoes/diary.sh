@@ -200,6 +200,12 @@ _entry_change ()
 # Viewing actions
 # ----------------------------------------------------------------------
 
+#
+# Print an entry
+#
+# Arguments:
+#   1) The file name of the entry
+#
 entry_cat ()
 {
    FILEPATH=`_entry_filepath $1`

@@ -133,6 +133,22 @@ user_date() {
 }
 
 #
+# Get the latest file in the directory specified by a path
+#
+# The path is actually something like this: 2015/01/01/23:41:12.cal
+# But this _file_ does not exist, as the path was generated when calling the
+# diary executeable. To get the latest file path, we have to remove the filename
+# and get the newest file in that directory.
+#
+# Arguments:
+#   1) The path
+#
+latest_file_for() {
+    builtin cd $PAGEDIR
+    find "$(dirname "$1")/" -type f -name "*.cal" | tail -n 1 | sed 's/\.cal//'
+}
+
+#
 # Returns the header date
 #
 # Arguments:
@@ -368,7 +384,7 @@ _diary_handle_interval() {
    FIRST_DATE=`user_date "$FIRST_DATE"` || return 1
    SECOND_DATE=`user_date "$SECOND_DATE"` || return 1
    if [ -n "$FIRST" ]; then
-      eval $CALLBACK_FOR_SINGLE_DATE "$FIRST_DATE"
+       eval $CALLBACK_FOR_SINGLE_DATE $(latest_file_for "$FIRST_DATE")
       return $?
    fi
 

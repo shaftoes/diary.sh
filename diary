@@ -449,6 +449,12 @@ diary_view ()
 # Editing actions
 # ----------------------------------------------------------------------
 
+#
+# Edit today
+#
+# Arguments:
+#   *) user_date() arguments
+#
 diary_edit ()
 {
    DATE=`user_date "$*"` && entry_edit $DATE || return 1

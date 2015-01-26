@@ -12,6 +12,10 @@
 #  Initially written by Jamie Briggs <jamie.briggs@computalog.com>
 #  and forked by Eugene Arshinov <earshinov@gmail.com> for personal use.
 #
+#  This is actually a fork of a fork.
+#  I (Matthias Beyer <mail@beyermatthias.de>) will extend this script, rewrite
+#  parts and add new features.
+#
 
 DIARYDIR="$HOME/.diary"
 PAGEDIR="$DIARYDIR/pages"

@@ -498,7 +498,7 @@ diary_add_entry() {
 #
 diary_grep() {
    builtin cd $PAGEDIR
-   grep "$@" `find . -name '??.cal' | sed 's:^\./::' | sort`
+   grep "$@" `find . -name '??:??:??.cal' | sed 's:^\./::' | sort`
 }
 
 #
@@ -522,7 +522,7 @@ diary_search() {
 
    builtin cd $PAGEDIR
    label_xterm "Diary: search for $*"
-   egrep --files-with-matches "$*" `find . -name '??.cal' | sort -r` |
+   egrep --files-with-matches "$*" `find . -name '??:??:??.cal' | sort -r` |
       xargs less -P'"u" for older, "i" for newer' -k$LESSOPTS_FILE +"/$*
 " ++g
    label_xterm $XTITLE

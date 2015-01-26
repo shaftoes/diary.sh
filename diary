@@ -128,7 +128,10 @@ user_date() {
 #   1) Use this time to display in the header time format
 #
 header() {
-   date --date="$1" '+%A, %x'
+    d=$(echo "$1" | awk -v FS=/ -v OFS=- '{print $1,$2,$3}')
+    dat=$(date --date="$d" '+%A, %x')
+    ext=$(echo "$1" | cut -d/ -f 4)
+    echo "$dat, $ext"
 }
 
 # ======================================================================

@@ -46,8 +46,8 @@ if [ "$EDITOR" = "" ]; then
 fi
 
 # Less configuration variables
-BACKKEY=u
-FWDKEY=i
+LESS_BACKKEY=u
+LESS_FWDKEY=i
 
 # Allow user to overide options
 . $DIARYDIR/diaryrc &>/dev/null
@@ -506,8 +506,8 @@ diary_search ()
    if [ ! -f $LESSOPTS ] || [ $LESSOPTS -ot $0 ]; then
       {
          echo #command
-         echo $BACKKEY    next-file
-         echo $FWDKEY   prev-file
+         echo $LESS_BACKKEY    next-file
+         echo $LESS_FWDKEY   prev-file
       } > $LESSKEY
       lesskey -o $LESSOPTS $LESSKEY
       rm $LESSKEY

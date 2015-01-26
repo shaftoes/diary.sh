@@ -110,7 +110,8 @@ filter_list() {
 # Returns date in the format of calendar file's filename
 #
 unified_date() {
-   DATE=`date '+%Y/%m/%d/%H:%M:%S' --date="$1"` && echo $DATE || return 1
+    [ -n "$1" ] && datearg="--date=$1" || datearg=""
+    DATE=`date '+%Y/%m/%d/%H:%M:%S' $datearg` && echo $DATE || return 1
 }
 
 # if `strptime` utility is available, use it to recognize dates

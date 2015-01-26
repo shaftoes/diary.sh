@@ -307,6 +307,14 @@ _entry_add_entry ()
    echo `date +%H:%M` $@ >> $FILE
 }
 
+#
+# Add an entry
+#
+# Arguments:
+#   1) The file to change/add
+#   2) Additional arguments to _entry_add_entry, to write to the file which is
+#   about to be created
+#
 entry_add_entry ()
 {
    FILE=$1

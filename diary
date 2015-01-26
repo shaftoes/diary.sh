@@ -60,6 +60,16 @@ LESSOPTS_FILE=$DIARYDIR/.less_srch
 # ======================================================================
 
 #
+# Print something on stderr
+#
+# Arguments:
+#   *) Print this on stderr
+#
+stderr() {
+    echo $* >&2
+}
+
+#
 # Set the label of the xterm instance
 #
 label_xterm() {

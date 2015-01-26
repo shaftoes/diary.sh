@@ -486,6 +486,14 @@ diary_grep ()
    grep "$@" `find . -name '??.cal' | sed 's:^\./::' | sort`
 }
 
+#
+# Search in the diary
+#
+# Override the less options to have "u" for older entries and "i" for newer
+# entries, so we can switch through the entries using these keys.
+#
+# Arguments: Not figured out yet
+#
 diary_search ()
 {
    if [ ! -f $LESSOPTS ] || [ $LESSOPTS -ot $0 ]; then

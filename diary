@@ -235,6 +235,18 @@ entry_view ()
 # The "edit" action
 # ----------------------------------------------------------------------
 
+#
+# Callback: Edit an entry
+#
+# Calls the $EDITOR to edit an entry.
+# If the file wasn't edited and was newly created, the file gets removed and if
+# it was created in a new directory, it gets removed, too.
+#
+# Arguments:
+#   1) File name
+#   2) File path
+#   3) Status of the file
+#
 _entry_edit ()
 {
    FILE=$1

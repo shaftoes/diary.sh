@@ -60,6 +60,16 @@ LESSOPTS_FILE=$DIARYDIR/.less_srch
 # ======================================================================
 
 #
+# Print something on stderr
+#
+# Arguments:
+#   *) Print this on stderr
+#
+stderr() {
+    echo $* >&2
+}
+
+#
 # Set the label of the xterm instance
 #
 label_xterm() {
@@ -110,15 +120,32 @@ filter_list() {
 # Returns date in the format of calendar file's filename
 #
 unified_date() {
-   DATE=`date '+%Y/%m/%d' --date="$1"` && echo $DATE || return 1
+    [ -n "$1" ] && datearg="--date=$1" || datearg=""
+    DATE=`date '+%Y/%m/%d/%H:%M:%S' $datearg` && echo $DATE || return 1
 }
 
 # if `strptime` utility is available, use it to recognize dates
 # specified in user's locale format
 user_date() {
   unified_date "$1" 2>/dev/null ||
-  strptime '%x' '%Y/%m/%d' <<< "$1" 2>/dev/null ||
+  strptime '%x' '%Y/%m/%d/%H:%M:%S' <<< "$1" 2>/dev/null ||
   ( echo "Invalid date \"$1\"" >&2; return 1 )
+}
+
+#
+# Get the latest file in the directory specified by a path
+#
+# The path is actually something like this: 2015/01/01/23:41:12.cal
+# But this _file_ does not exist, as the path was generated when calling the
+# diary executeable. To get the latest file path, we have to remove the filename
+# and get the newest file in that directory.
+#
+# Arguments:
+#   1) The path
+#
+latest_file_for() {
+    builtin cd $PAGEDIR
+    find "$(dirname "$1")/" -type f -name "*.cal" | tail -n 1 | sed 's/\.cal//'
 }
 
 #
@@ -128,7 +155,10 @@ user_date() {
 #   1) Use this time to display in the header time format
 #
 header() {
-   date --date="$1" '+%A, %x'
+    d=$(echo "$1" | awk -v FS=/ -v OFS=- '{print $1,$2,$3}')
+    dat=$(date --date="$d" '+%A, %x')
+    ext=$(echo "$1" | cut -d/ -f 4)
+    echo "$dat, $ext"
 }
 
 # ======================================================================
@@ -354,7 +384,7 @@ _diary_handle_interval() {
    FIRST_DATE=`user_date "$FIRST_DATE"` || return 1
    SECOND_DATE=`user_date "$SECOND_DATE"` || return 1
    if [ -n "$FIRST" ]; then
-      eval $CALLBACK_FOR_SINGLE_DATE "$FIRST_DATE"
+       eval $CALLBACK_FOR_SINGLE_DATE $(latest_file_for "$FIRST_DATE")
       return $?
    fi
 
@@ -468,7 +498,7 @@ diary_add_entry() {
 #
 diary_grep() {
    builtin cd $PAGEDIR
-   grep "$@" `find . -name '??.cal' | sed 's:^\./::' | sort`
+   grep "$@" `find . -name '??:??:??.cal' | sed 's:^\./::' | sort`
 }
 
 #
@@ -492,7 +522,7 @@ diary_search() {
 
    builtin cd $PAGEDIR
    label_xterm "Diary: search for $*"
-   egrep --files-with-matches "$*" `find . -name '??.cal' | sort -r` |
+   egrep --files-with-matches "$*" `find . -name '??:??:??.cal' | sort -r` |
       xargs less -P'"u" for older, "i" for newer' -k$LESSOPTS_FILE +"/$*
 " ++g
    label_xterm $XTITLE

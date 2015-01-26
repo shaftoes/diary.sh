@@ -372,6 +372,14 @@ _diary_handle_interval ()
 # The "cat" action
 # ----------------------------------------------------------------------
 
+#
+# Callback: Print all files which are specified in the arguments
+#
+# Arguments:
+#   1) <skipped>
+#   2) <skipped>
+#   *) File path to print
+#
 _diary_cat_interval ()
 {
    shift 2

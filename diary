@@ -148,9 +148,12 @@ _entry_filepath ()
    echo $PAGEDIR/$1.cal
 }
 
-# The `_entry_change` metafunction
-# ----------------------------------------------------------------------
-
+#
+# Ensure an entry exists
+#
+# Arguments:
+#   1) File name for the entry to check
+#
 _entry_ensure_exists ()
 {
    FILEPATH=`_entry_filepath $1`

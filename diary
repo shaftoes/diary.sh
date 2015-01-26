@@ -432,6 +432,15 @@ _diary_view_interval ()
    label_xterm $XTITLE
 }
 
+#
+# View diary entries
+#
+# Use _diary_handle_interval with either viewing a single entry or a list of
+# entries
+#
+# Arguments:
+#   *) interval specification
+#
 diary_view ()
 {
    _diary_handle_interval entry_view _diary_view_interval "$@"

@@ -289,6 +289,16 @@ entry_edit ()
 # The "entry" action
 # ----------------------------------------------------------------------
 
+#
+# Callback: Add an entry
+#
+# Ignores the File name and the status whether the file exists or not but uses
+# the filepath of the file to write a date with the specified date entry and all
+# other arguments.
+#
+# Arguments:
+#   1) Filepath to write to
+#
 _entry_add_entry ()
 {
    FILE=$2

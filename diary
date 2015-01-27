@@ -23,7 +23,10 @@ if [ -z "$DIARYDIR" ]; then
     DIARYDIR="$HOME/.diary"
 fi
 
-PAGEDIR="$DIARYDIR/pages"
+PAGEDIRNAME="pages"
+PAGEDIR="$DIARYDIR/$PAGEDIRNAME"
+
+DIARY_USE_GIT=1
 
 #
 #  The following are can be overidden in the user's diaryrc file
@@ -67,6 +70,10 @@ LESSOPTS_FILE=$DIARYDIR/.less_srch
 #
 stderr() {
     echo $* >&2
+}
+
+use_git() {
+    [ $DIARY_USE_GIT -eq 1 ]
 }
 
 #
@@ -177,6 +184,10 @@ header() {
 #
 _entry_filepath() {
    echo $PAGEDIR/$1.cal
+}
+
+_entry_filepath_from_diarypath() {
+    echo "$PAGEDIRNAME/$1.cal"
 }
 
 #
@@ -296,6 +307,20 @@ _entry_edit() {
         [ $FILEPATH == $PAGEDIR ] && break
         rmdir $FILEPATH &>/dev/null || break
       done
+  else
+        builtin cd $DIARYDIR
+        FILEPATH=$(_entry_filepath_from_diarypath $FILE)
+
+        if [ ! -d .git ]; then
+            use_git && git init && git add ./* && git commit -am 'Initial import'
+        fi
+
+        if [ $(git rev-parse 2>&1 >/dev/null; echo $?) -eq 0 ]; then
+            git add $FILEPATH
+            git commit $FILEPATH -m "Edited: $FILE"
+        else
+            use_git && stderr "Could not commit, no git directory there"
+        fi
    fi
 }
 
@@ -528,6 +553,12 @@ diary_search() {
    label_xterm $XTITLE
 }
 
+diary_history() {
+    builtin cd $DIARYDIR
+    git log --oneline --graph --all -n 1000 ||
+        (use_git && stderr "Couldn't show history, no git repository here")
+}
+
 # ======================================================================
 # Dealing with the old pages format
 # ======================================================================
@@ -608,6 +639,9 @@ elif [ $# = 1 ]; then
       ;;
       grep | search )
          echo "You need to specify search terms."
+      ;;
+      history )
+          diary_history
       ;;
       * )
          echo "Invalid parameter: $@" >&2

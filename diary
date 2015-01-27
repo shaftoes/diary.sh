@@ -579,29 +579,6 @@ diary_ls() {
 }
 
 # ======================================================================
-# Dealing with the old pages format
-# ======================================================================
-
-get_old_pages() {
-    find $PAGEDIR -maxdepth 1 -name '????.??.??'
-}
-
-refile_old_pages() {
-    echo -n "Reorganizing page structure ... "
-
-    for fil in `get_old_pages`; do
-        FPATH=`echo $fil |
-        sed -e 's:\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\):\1\/\2\/\3:'`
-        FPATH=$FPATH.cal
-        MONTHDIR=`dirname $FPATH`
-
-        mkdir -p $MONTHDIR
-        mv $fil $FPATH
-        echo -n .
-    done
-}
-
-# ======================================================================
 # Usage
 # ======================================================================
 
@@ -633,9 +610,6 @@ ENDUSAGE
 
 #  Handle first time use
 mkdir -p $PAGEDIR
-
-#  Handle conversion from old format
-[ -n "`get_old_pages`" ] && refile_old_pages
 
 if [ $# = 0 ]; then
     diary_edit

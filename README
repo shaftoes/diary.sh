@@ -1,5 +1,4 @@
-Diary-f 0.1
-===========
+# Diary-f 0.1
 
 Diary-f is a fork of diary program written by Jamie Briggs. Diary program's
 homepage is http://sourceforge.net/projects/diary/ .
@@ -11,8 +10,8 @@ your favorite text editor -- to produce a suprisingly capable tool.
 See diary(1) for a more complete description and a bunch of examples.
 
 
-Requirements:
---------------
+## Requirements:
+
 diary is a shell script that uses a number of common programs.  These
 include:
 
@@ -29,24 +28,23 @@ in C (https://github.com/earshinov/strptime) or write your own
 which can be run from the command line in the same way.
 
 
-Installation:
---------------
-1.  system-wide:
+# Installation:
+
+1. system-wide:
    - su to root
    - Unzip and untar the tarball somewhere.
    - Customize and run install.sh
 
-2.  local:
+2. local:
    - Unzip and untar the tarball somewhere.
    - copy 'diary' somewhere in your path and make it executable
      (chmod a+rx diary).
 
 
-Usage:
--------
+## Usage:
+
 See diary(1).
 
+## Reporting bugs:
 
-Reporting bugs:
-----------------
 Please use GitHub's issue tracker:  http://github.com/earshinov/diary-f/

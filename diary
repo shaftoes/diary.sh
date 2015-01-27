@@ -23,7 +23,8 @@ if [ -z "$DIARYDIR" ]; then
     DIARYDIR="$HOME/.diary"
 fi
 
-PAGEDIR="$DIARYDIR/pages"
+PAGEDIRNAME="pages"
+PAGEDIR="$DIARYDIR/$PAGEDIRNAME"
 
 #
 #  The following are can be overidden in the user's diaryrc file
@@ -177,6 +178,10 @@ header() {
 #
 _entry_filepath() {
    echo $PAGEDIR/$1.cal
+}
+
+_entry_filepath_from_diarypath() {
+    echo "$PAGEDIRNAME/$1.cal"
 }
 
 #

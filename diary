@@ -152,7 +152,7 @@ user_date() {
 #
 latest_file_for() {
     builtin cd $PAGEDIR
-    find "$(dirname "$1")/" -type f -name "*.cal" | tail -n 1 | sed 's/\.cal//'
+    find "$(dirname "$1")/" -type f -name "*.cal" | head -n 1 | sed 's/\.cal//'
 }
 
 #
@@ -499,7 +499,12 @@ diary_view() {
 #   *) user_date() arguments
 #
 diary_edit() {
-    DATE=`user_date "$*"` && entry_edit $DATE || return 1
+    if [ $# -eq 0 ]; then
+        DATE=$(latest_file_for $(user_date "$*"))
+    else
+        DATE=$(user_date "$*")
+    fi
+    entry_edit $DATE || return 1
 }
 
 #

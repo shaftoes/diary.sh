@@ -1,45 +1,40 @@
-# Diary-f 0.1
+# diary.sh
 
-Diary-f is a fork of diary program written by Jamie Briggs. Diary program's
-homepage is http://sourceforge.net/projects/diary/ .
+diary.sh is a fork of Diary-f which is a fork of the diary program written by
+Jamie Briggs. The program's homepage was http://sourceforge.net/projects/diary/
+and http://gitub.com/earshinov/diary-f/
 
-Diary is a console-based diary that leverages the capabilities of
+diary.sh is a console-based diary that leverages the capabilities of
 the Unix toolbox, using date, grep, less and a host of others -- as well as
 your favorite text editor -- to produce a suprisingly capable tool.
 
-See diary(1) for a more complete description and a bunch of examples.
+The repository is actually named `.sh` because I tend to name all my
+repositories with the relevant extension for the language it is just a small
+tool. The executeable is still `diary`, though.
 
+See diary(1) for a more complete description and a bunch of examples.
 
 ## Requirements:
 
-diary is a shell script that uses a number of common programs.  These
-include:
+diary.sh (or `diary`) is a shell script that uses a number of common programs.
+These include:
 
    bash, xprop, grep, egrep, cut, sed, cat, chmod, date, cp,
    rm, sort, tail, ls, xargs, and less.
 
-Reasonably recent versions of these utilities (diary had been functional
-for approximately 2 years before being publicly released).
+   With my patches it also uses git and gpg.
 
-Diary-f allows locale's date format in command line arguments representing
-dates.  However, to be able to use this feature you must install a helper
-strptime utility.  You can download, compile and install my version written
-in C (https://github.com/earshinov/strptime) or write your own
-which can be run from the command line in the same way.
+Diary-f allowed locale's date format in command line arguments representing
+dates.  However, to be able to use this feature you had to install a helper
+strptime utility. This utility was written in C by `earshinov`
+(https://github.com/earshinov/strptime) but I, personally, never used it.
+So, this feature will be removed in future, as I won't maintain a fork of the
+`strptime` utility.
 
+## Installation:
 
-# Installation:
-
-1. system-wide:
-   - su to root
-   - Unzip and untar the tarball somewhere.
-   - Customize and run install.sh
-
-2. local:
-   - Unzip and untar the tarball somewhere.
-   - copy 'diary' somewhere in your path and make it executable
-     (chmod a+rx diary).
-
+`diary.sh` is work in progress. You shouldn't install or use it by now.
+Installation instructions will be added as soon as it is ready.
 
 ## Usage:
 
@@ -47,4 +42,8 @@ See diary(1).
 
 ## Reporting bugs:
 
-Please use GitHub's issue tracker:  http://github.com/earshinov/diary-f/
+Please use [the github issue tracker](http://github.com/matthiasbeyer/diary.sh/)
+
+## Acknowledgements
+
+Thanks to Jamie Briggs and Eugene Arshinov for writing this awesome tool!

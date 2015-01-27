@@ -12,6 +12,8 @@ The repository is actually named `.sh` because I tend to name all my
 repositories with the relevant extension for the language it is just a small
 tool. The executeable is still `diary`, though.
 
+diary.sh is _not_ compatible with prior versions of the diary application.
+
 See diary(1) for a more complete description and a bunch of examples.
 
 ## Requirements:

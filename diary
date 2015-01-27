@@ -564,6 +564,20 @@ diary_history() {
         (use_git && stderr "Couldn't show history, no git repository here")
 }
 
+diary_ls() {
+    builtin cd $PAGEDIR
+    if [ $# -eq 0 ]; then
+        tree
+    else
+        while true
+        do
+            builtin cd $1; shift
+            [ $# -eq 0 ] && break
+        done
+        tree
+    fi
+}
+
 # ======================================================================
 # Dealing with the old pages format
 # ======================================================================
@@ -675,6 +689,10 @@ else
         search )
             shift
             diary_search $@
+            ;;
+        ls )
+            shift
+            diary_ls $@
             ;;
         * )
             echo "Invalid parameter: $@" >&2

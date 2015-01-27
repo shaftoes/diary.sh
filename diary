@@ -548,6 +548,12 @@ diary_search() {
    label_xterm $XTITLE
 }
 
+diary_history() {
+    builtin cd $DIARYDIR
+    git log --oneline --graph --all -n 1000 ||
+        (use_git && stderr "Couldn't show history, no git repository here")
+}
+
 # ======================================================================
 # Dealing with the old pages format
 # ======================================================================
@@ -628,6 +634,9 @@ elif [ $# = 1 ]; then
       ;;
       grep | search )
          echo "You need to specify search terms."
+      ;;
+      history )
+          diary_history
       ;;
       * )
          echo "Invalid parameter: $@" >&2

@@ -310,6 +310,11 @@ _entry_edit() {
   else
         builtin cd $DIARYDIR
         FILEPATH=$(_entry_filepath_from_diarypath $FILE)
+
+        if [ ! -d .git ]; then
+            use_git && git init && git add ./* && git commit -am 'Initial import'
+        fi
+
         if [ $(git rev-parse 2>&1 >/dev/null; echo $?) -eq 0 ]; then
             git add $FILEPATH
             git commit $FILEPATH -m "Edited: $FILE"

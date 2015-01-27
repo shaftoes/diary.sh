@@ -622,6 +622,7 @@ usage() {
     diary grep [Ff]ind          - grep pages for lines containing find or Find
     diary grep -F Find          - search for fixed string (options are passed directly to grep)
     diary search "^Fixed"       - open pages for viewing that contain lines that start with "Fixed"
+    diary ls [y] [m] [d]        - Show entries. Optionally filter per year, month and day
 ENDUSAGE
 }
 

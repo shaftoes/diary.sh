@@ -127,6 +127,47 @@ edit() {
     $EDITOR $*
 }
 
+#
+# Open a file, returning the file name for the opened file
+#
+# Arguments:
+#   1) The file path
+#
+open_file() {
+    echo $1 # no open operation atm
+}
+
+#
+# Close a file
+#
+# Arguments:
+#   1) The open file
+#
+close_file() {
+    rm $1
+}
+
+#
+# Close an edited file
+#
+# Arguments:
+#   1) The open file
+#   2) The original path
+#
+close_edited_file() {
+    echo "" # does nothing atm
+}
+
+#
+# Close multiple non-edited files
+#
+close_files() {
+    for arg
+    do
+        close_file $arg
+    done
+}
+
 # ======================================================================
 # Date functions
 # ======================================================================

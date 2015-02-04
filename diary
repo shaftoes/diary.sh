@@ -119,6 +119,14 @@ filter_list() {
     awk -vb="$1" -ve="$2" "$AWK_PROGRAM"
 }
 
+#
+# Invoke the editor with the arguments passed
+# Passed arguments can be editor arguments as well, of course
+#
+edit() {
+    $EDITOR $*
+}
+
 # ======================================================================
 # Date functions
 # ======================================================================
@@ -292,7 +300,7 @@ _entry_edit() {
 
     OLD_TIMESTAMP=$(timestamp $FILEPATH)
     label_xterm "Diary: edit $FILE"
-    $EDITOR $EDIT_OPTIONS $FILEPATH
+    edit $EDIT_OPTIONS $FILEPATH
     label_xterm $XTITLE
     NEW_TIMESTAMP=$(timestamp $FILEPATH)
 

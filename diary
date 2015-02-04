@@ -256,8 +256,10 @@ _entry_ensure_exists() {
     DIR=`dirname $FILEPATH`
     mkdir -p $DIR
 
-    echo "                         `header $1`" > $FILEPATH
-    echo >> $FILEPATH
+    tmpfile=$(open_file $FILEPATH)
+    echo "                         `header $1`" > $tmpfile
+    echo "" > $tmpfile
+    close_edited_file $FILEPATH $tmpfile
 
     echo 'new'
     return
@@ -297,8 +299,14 @@ _entry_change() {
 #
 entry_cat() {
     FILEPATH=`_entry_filepath $1`
-    [ -f $FILEPATH ] && cat $FILEPATH
-    return $?
+    res=1
+    if [ -f $FILEPATH ]
+        tmpfile=$(open_file $FILEPATH)
+        cat tmpfile
+        res=$?
+        close_file $tmpfile
+    fi
+    return $res
 }
 
 #
@@ -312,7 +320,9 @@ entry_view() {
     if [ -f $FILEPATH ]
     then
         label_xterm "Diary: view $1"
-        less -c +g $FILEPATH
+        tmpfile=$(open_file $FILEPATH)
+        less -c +g $tmpfile
+        close_file $tmpfile
         label_xterm $XTITLE
         return 0
     fi
@@ -341,7 +351,9 @@ _entry_edit() {
 
     OLD_TIMESTAMP=$(timestamp $FILEPATH)
     label_xterm "Diary: edit $FILE"
-    edit $EDIT_OPTIONS $FILEPATH
+    tmpfile=$(open_file $FILEPATH)
+    edit $EDIT_OPTIONS $tmpfile
+    close_edited_file $tmpfile $FILEPATH
     label_xterm $XTITLE
     NEW_TIMESTAMP=$(timestamp $FILEPATH)
 
@@ -402,7 +414,9 @@ _entry_add_entry() {
     FILE=$2
     shift 3
 
-    echo `date +%H:%M` $@ >> $FILE
+    tmpfile=$(open_file $FILE)
+    echo `date +%H:%M` $@ >> $tmpfile
+    close_edited_file $tmpfile $FILE
 }
 
 #
@@ -489,7 +503,9 @@ _diary_handle_interval() {
 _diary_cat_interval() {
     shift 2
     for file; do
-        cat "$file"
+        tmpfile=$(open_file $file)
+        cat "$tmpfile"
+        close_file $tmpfile
         echo
     done
 }
@@ -521,7 +537,14 @@ _diary_view_interval() {
     shift 2
 
     label_xterm "Diary: view $FIRST_DATE - $SECOND_DATE"
-    less "$@"
+    decrypted=""
+    for arg
+    do
+        decrypted="$decrypted $(open_file $arg)"
+    done
+    less $decrypted
+    close_files $decrypted
+
     label_xterm $XTITLE
 }
 
@@ -577,6 +600,7 @@ diary_add_entry() {
 #
 diary_grep() {
     builtin cd $PAGEDIR
+    stderr "This feature is currently not supported, due to heavy decrypting files would be neccessary to run a 'grep' on them"; exit 1
     grep "$@" `find . -name '??:??:??.cal' | sed 's:^\./::' | sort`
 }
 
@@ -601,6 +625,7 @@ diary_search() {
 
     builtin cd $PAGEDIR
     label_xterm "Diary: search for $*"
+    stderr "This feature is currently not supported, due to heavy decrypting files would be neccessary to run a 'grep' on them"; exit 1
     egrep --files-with-matches "$*" `find . -name '??:??:??.cal' | sort -r` |
     xargs less -P'"u" for older, "i" for newer' -k$LESSOPTS_FILE +"/$*
     " ++g
